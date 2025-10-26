@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiAura</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="xp-content">
+            <button class="language-toggle" id="langToggle">FR</button>
+            <button class="back-button" id="navBtn">📅</button>
+
+        <!-- Page 1: Mood Selection -->
+        <div id="page1" class="page active">
+            <h1 id="mainTitle">Hello, how are you feeling today?</h1>
+            
+            <div class="orb-container">
+                <div class="signal-frame">
+                    <div class="signal-bars level-3" id="signalBars">
+                        <div class="signal-bar bar-1"></div>
+                        <div class="signal-bar bar-2"></div>
+                        <div class="signal-bar bar-3"></div>
+                        <div class="signal-bar bar-4"></div>
+                        <div class="signal-bar bar-5"></div>
+                    </div>
+                </div>
+            </div>
+            
+<div class="color-grid">
+    <div class="color-option" 
+         style="background: radial-gradient(ellipse at 30% 30%, rgba(200, 245, 200, 0.95), rgba(144, 238, 144, 0.85));" 
+         data-color="rgba(144, 238, 144, 0.9)" 
+         data-level="1" 
+         data-label-en="Fantastic" 
+         data-label-fr="Fantastique"></div>
+    
+    <div class="color-option" 
+         style="background: radial-gradient(ellipse at 30% 30%, rgba(170, 235, 200, 0.8), rgba(120, 220, 180, 0.7));" 
+         data-color="rgba(120, 220, 180, 0.75)" 
+         data-level="2" 
+         data-label-en="Fine" 
+         data-label-fr="Bien"></div>
+    
+    <div class="color-option" 
+         style="background: radial-gradient(ellipse at 30% 30%, rgba(150, 220, 230, 0.65), rgba(100, 200, 210, 0.55));" 
+         data-color="rgba(100, 200, 210, 0.6)" 
+         data-level="3" 
+         data-label-en="Okay" 
+         data-label-fr="Correct"></div>
+    
+    <div class="color-option" 
+         style="background: radial-gradient(ellipse at 30% 30%, rgba(180, 200, 235, 0.5), rgba(140, 180, 220, 0.4));" 
+         data-color="rgba(140, 180, 220, 0.45)" 
+         data-level="4" 
+         data-label-en="Low" 
+         data-label-fr="Bas"></div>
+    
+    <div class="color-option" 
+         style="background: radial-gradient(ellipse at 30% 30%, rgba(190, 200, 215, 0.35), rgba(160, 180, 200, 0.25));" 
+         data-color="rgba(160, 180, 200, 0.3)" 
+         data-level="5" 
+         data-label-en="Down" 
+         data-label-fr="Abattu"></div>
+</div>    
+    <div class="color-label" id="colorLabel"></div>
+    </div>
+
+        <!-- Page 2: Year Calendar -->
+        <div id="page2" class="page">
+            <h1 id="yearTitle">Your Year</h1>
+            <div class="stats">
+                <div class="year-nav">
+                <button class="year-arrow" id="prevYear">◀</button>
+                </div>
+                <span id="yearDisplay">2025</span>
+                <button class="year-arrow" id="nextYear">▶</button>
+                <span id="loggedDays">0 days logged</span>
+            </div>
+            <div class="year-grid" id="yearGrid"></div>
+        </div>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
