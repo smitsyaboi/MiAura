@@ -106,7 +106,7 @@
 </head>
 <body>
     <div class="test-container">
-        <h1>🔥 MiAura Streak Animation Tester</h1>
+        <h1>✨ MiAura Streak Animation Tester</h1>
 
         <div class="controls">
             <button onclick="setStreak(0)">0 Days</button>
@@ -122,7 +122,7 @@
             <h2>Full Size Streak Display (Page 1 Style)</h2>
             <div class="streak-demo">
                 <div id="testStreak1" class="streak-display">
-                    <span class="streak-emoji">🔥</span><span class="streak-number">0</span>
+                    <span class="streak-emoji">✨</span><span class="streak-number">0</span>
                 </div>
             </div>
         </div>
@@ -131,7 +131,7 @@
             <h2>Compact Streak Display (Page 2 Style)</h2>
             <div class="streak-demo">
                 <div id="testStreak2" class="streak-display-compact">
-                    <span class="streak-emoji">🔥</span><span class="streak-number">0</span>
+                    <span class="streak-emoji">✨</span><span class="streak-number">0</span>
                 </div>
             </div>
         </div>
@@ -182,7 +182,7 @@
             ];
 
             displays.forEach((display, index) => {
-                display.innerHTML = `<span class="streak-emoji">🔥</span><span class="streak-number">${days}</span>`;
+                display.innerHTML = `<span class="streak-emoji">✨</span><span class="streak-number">${days}</span>`;
                 display.className = index === 0 ? 'streak-display' : 'streak-display-compact';
                 if (days > 0) {
                     display.classList.add('streak-level-' + level);
