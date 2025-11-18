@@ -321,7 +321,6 @@ function updateStreakDisplay() {
     const currentStreakEl = document.getElementById('currentStreak');
     const longestStreakEl = document.getElementById('longestStreak');
     const currentStreakEl2 = document.getElementById('currentStreak2');
-    const longestStreakEl2 = document.getElementById('longestStreak2');
 
     const streakLevel = getStreakLevel(streaks.currentStreak);
 
@@ -339,18 +338,13 @@ function updateStreakDisplay() {
         longestStreakEl.textContent = `${longestText}: ${Math.max(streaks.longestStreak, streakData.longestStreak)}`;
     }
 
-    // Update Page 2 streak display
+    // Update Page 2 compact streak display
     if (currentStreakEl2) {
         currentStreakEl2.innerHTML = `<span class="streak-emoji">🔥</span><span class="streak-number">${streaks.currentStreak}</span>`;
-        currentStreakEl2.className = 'streak-display';
+        currentStreakEl2.className = 'streak-display-compact';
         if (streaks.currentStreak > 0) {
             currentStreakEl2.classList.add('streak-level-' + streakLevel);
         }
-    }
-
-    if (longestStreakEl2) {
-        const longestText = translations[currentLanguage].longestStreak;
-        longestStreakEl2.textContent = `${longestText}: ${Math.max(streaks.longestStreak, streakData.longestStreak)}`;
     }
 }
 

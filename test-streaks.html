@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiAura Streak Tester</title>
+    <link rel="stylesheet" href="popup.css">
+    <style>
+        body {
+            padding: 40px;
+            background: #f0f0f0;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2d4a3e;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .controls button {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+        .test-section {
+            margin-bottom: 40px;
+        }
+        .test-section h2 {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .streak-demo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80px;
+            background: linear-gradient(135deg, rgba(240, 250, 245, 0.8), rgba(230, 245, 240, 0.6));
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .info {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-size: 13px;
+            color: #666;
+        }
+        .info h3 {
+            margin-top: 0;
+            color: #2d4a3e;
+            font-size: 14px;
+        }
+        .info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .info li {
+            margin: 5px 0;
+        }
+        .add-mood-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff9e6;
+            border-radius: 8px;
+            border: 2px dashed #ffd700;
+        }
+        .add-mood-section h3 {
+            margin-top: 0;
+            color: #2d4a3e;
+        }
+        .date-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .date-input-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .quick-add {
+            margin-top: 15px;
+        }
+        .quick-add button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔥 MiAura Streak Animation Tester</h1>
+
+        <div class="controls">
+            <button onclick="setStreak(0)">0 Days</button>
+            <button onclick="setStreak(1)">1 Day (Level 1)</button>
+            <button onclick="setStreak(3)">3 Days (Level 2)</button>
+            <button onclick="setStreak(7)">7 Days (Level 3)</button>
+            <button onclick="setStreak(14)">14 Days (Level 4)</button>
+            <button onclick="setStreak(30)">30 Days (Level 5)</button>
+            <button onclick="setStreak(100)">100 Days (Level 6 🌈)</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Full Size Streak Display (Page 1 Style)</h2>
+            <div class="streak-demo">
+                <div id="testStreak1" class="streak-display">
+                    <span class="streak-emoji">🔥</span><span class="streak-number">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Compact Streak Display (Page 2 Style)</h2>
+            <div class="streak-demo">
+                <div id="testStreak2" class="streak-display-compact">
+                    <span class="streak-emoji">🔥</span><span class="streak-number">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info">
+            <h3>Animation Levels:</h3>
+            <ul>
+                <li><strong>Level 1 (1-2 days):</strong> Subtle orange glow</li>
+                <li><strong>Level 2 (3-6 days):</strong> Gentle pulsing animation</li>
+                <li><strong>Level 3 (7-13 days):</strong> Moderate pulse with stronger orange-red glow</li>
+                <li><strong>Level 4 (14-29 days):</strong> Strong pulse + rotation animation</li>
+                <li><strong>Level 5 (30-99 days):</strong> Intense effects + rotating fire + gradient text</li>
+                <li><strong>Level 6 (100+ days):</strong> LEGENDARY! Rainbow gradient + extreme rotation/scaling/pulsing</li>
+            </ul>
+        </div>
+
+        <div class="add-mood-section">
+            <h3>Add Test Data to Extension</h3>
+            <p>Use these buttons to add mood entries to your extension for testing streaks:</p>
+
+            <div class="quick-add">
+                <button onclick="addConsecutiveDays(3)">Add 3-Day Streak</button>
+                <button onclick="addConsecutiveDays(7)">Add 7-Day Streak</button>
+                <button onclick="addConsecutiveDays(14)">Add 14-Day Streak</button>
+                <button onclick="addConsecutiveDays(30)">Add 30-Day Streak</button>
+                <button onclick="addConsecutiveDays(100)">Add 100-Day Streak</button>
+                <button onclick="clearAllMoods()" style="background: #ff6b6b; color: white;">Clear All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getStreakLevel(streak) {
+            if (streak >= 100) return 6;
+            if (streak >= 30) return 5;
+            if (streak >= 14) return 4;
+            if (streak >= 7) return 3;
+            if (streak >= 3) return 2;
+            if (streak >= 1) return 1;
+            return 0;
+        }
+
+        function setStreak(days) {
+            const level = getStreakLevel(days);
+            const displays = [
+                document.getElementById('testStreak1'),
+                document.getElementById('testStreak2')
+            ];
+
+            displays.forEach((display, index) => {
+                display.innerHTML = `<span class="streak-emoji">🔥</span><span class="streak-number">${days}</span>`;
+                display.className = index === 0 ? 'streak-display' : 'streak-display-compact';
+                if (days > 0) {
+                    display.classList.add('streak-level-' + level);
+                }
+            });
+        }
+
+        function addConsecutiveDays(numDays) {
+            const moodData = {};
+            const colors = [
+                'rgba(144, 238, 144, 0.9)',  // Fantastic
+                'rgba(120, 220, 180, 0.75)', // Fine
+                'rgba(100, 200, 210, 0.6)',  // Okay
+            ];
+
+            const today = new Date();
+
+            for (let i = 0; i < numDays; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - (numDays - 1 - i));
+
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}`;
+
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+                moodData[dateStr] = {
+                    color: randomColor,
+                    timestamp: date.toISOString()
+                };
+            }
+
+            localStorage.setItem('moodTracker', JSON.stringify(moodData));
+            alert(`Added ${numDays} consecutive days of mood data! Reload your extension to see the streak.`);
+        }
+
+        function clearAllMoods() {
+            if (confirm('This will delete ALL mood data from your extension. Are you sure?')) {
+                localStorage.removeItem('moodTracker');
+                localStorage.removeItem('streakData');
+                alert('All mood data cleared! Reload your extension.');
+            }
+        }
+
+        // Initialize with 0 days
+        setStreak(0);
+    </script>
+</body>
+</html>

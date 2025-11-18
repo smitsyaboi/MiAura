@@ -82,19 +82,18 @@
         <!-- Page 2: Year Calendar -->
         <div id="page2" class="page">
             <h1 id="yearTitle">Your Year</h1>
-            <div class="streak-container-page2">
-                <div id="currentStreak2" class="streak-display">
-                    <span class="streak-emoji">🔥</span><span class="streak-number">0</span>
+            <div class="calendar-header">
+                <div class="year-nav-section">
+                    <button class="year-arrow" id="prevYear">◀</button>
+                    <span id="yearDisplay">2025</span>
+                    <button class="year-arrow" id="nextYear">▶</button>
                 </div>
-                <div id="longestStreak2" class="longest-streak">longest: 0</div>
-            </div>
-            <div class="stats">
-                <div class="year-nav">
-                <button class="year-arrow" id="prevYear">◀</button>
+                <div class="stats-section">
+                    <div id="currentStreak2" class="streak-display-compact">
+                        <span class="streak-emoji">🔥</span><span class="streak-number">0</span>
+                    </div>
+                    <span id="loggedDays" class="logged-days-text">0 days logged</span>
                 </div>
-                <span id="yearDisplay">2025</span>
-                <button class="year-arrow" id="nextYear">▶</button>
-                <span id="loggedDays">0 days logged</span>
             </div>
             <div class="year-grid" id="yearGrid"></div>
         </div>
