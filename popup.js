@@ -25,6 +25,16 @@ const translations = {
         currentStreakPlural: 'jours de suite',
         longestStreak: 'record',
         streakDays: 'jours'
+    },
+    pt: {
+        title: 'Olá, como você está se sentindo hoje?',
+        yearTitle: 'Seu Ano',
+        daysLogged: 'dias registrados',
+        back: 'Voltar',
+        currentStreak: 'dia de sequência',
+        currentStreakPlural: 'dias de sequência',
+        longestStreak: 'recorde',
+        streakDays: 'dias'
     }
 };
 
@@ -44,7 +54,8 @@ function updateLanguage() {
     
     document.getElementById('mainTitle').textContent = translations[lang].title;
     document.getElementById('yearTitle').textContent = translations[lang].yearTitle;
-    document.getElementById('langToggle').textContent = lang === 'en' ? 'FR' : 'EN';
+    const langLabels = { en: 'FR', fr: 'PT', pt: 'EN' };
+    document.getElementById('langToggle').textContent = langLabels[lang];
     
     // Update nav button icon based on which page is active
     if (page1.classList.contains('active')) {
@@ -57,7 +68,8 @@ function updateLanguage() {
     if (selectedColor) {
         const selectedOption = document.querySelector(`[data-color="${selectedColor}"]`);
         if (selectedOption) {
-            const label = currentLanguage === 'en' ? selectedOption.dataset.labelEn : selectedOption.dataset.labelFr;
+            const labelKey = `label${lang.charAt(0).toUpperCase() + lang.slice(1)}`;
+            const label = selectedOption.dataset[labelKey];
             document.getElementById('colorLabel').textContent = label;
         }
     }
@@ -80,7 +92,9 @@ function updateLanguage() {
 }
 
 function toggleLanguage() {
-    currentLanguage = currentLanguage === 'en' ? 'fr' : 'en';
+    const supportedLanguages = ['en', 'fr', 'pt'];
+    const currentIndex = supportedLanguages.indexOf(currentLanguage);
+    currentLanguage = supportedLanguages[(currentIndex + 1) % supportedLanguages.length];
     localStorage.setItem('language', currentLanguage);
     updateLanguage();
 }
@@ -119,7 +133,8 @@ function setupEventListeners() {
     document.querySelectorAll('.color-option').forEach((option) => {
         option.addEventListener('mouseenter', () => {
             const level = option.dataset.level;
-            const label = currentLanguage === 'en' ? option.dataset.labelEn : option.dataset.labelFr;
+            const labelKey = `label${currentLanguage.charAt(0).toUpperCase() + currentLanguage.slice(1)}`;
+            const label = option.dataset[labelKey];
             hoveredLabel = label;
             signalBars.className = 'signal-bars level-' + level;
             colorLabel.textContent = label;
@@ -136,7 +151,8 @@ function setupEventListeners() {
                 const selectedOption = document.querySelector(`[data-color="${selectedColor}"]`);
                 if (selectedOption) {
                     const level = selectedOption.dataset.level;
-                    const label = currentLanguage === 'en' ? selectedOption.dataset.labelEn : selectedOption.dataset.labelFr;
+                    const labelKey = `label${currentLanguage.charAt(0).toUpperCase() + currentLanguage.slice(1)}`;
+                    const label = selectedOption.dataset[labelKey];
                     signalBars.className = 'signal-bars level-' + level;
                     colorLabel.textContent = label;
                 }
@@ -145,7 +161,8 @@ function setupEventListeners() {
         
         option.addEventListener('click', () => {
             selectedColor = option.dataset.color;
-            const label = currentLanguage === 'en' ? option.dataset.labelEn : option.dataset.labelFr;
+            const labelKey = `label${currentLanguage.charAt(0).toUpperCase() + currentLanguage.slice(1)}`;
+            const label = option.dataset[labelKey];
             colorLabel.textContent = label;
             colorLabel.classList.add('visible');
             saveMood();
@@ -361,11 +378,11 @@ function loadYearGrid() {
     
     // Mood labels for tooltip
     const moodLabels = {
-        'rgba(144, 238, 144, 0.9)': { en: 'Fantastic', fr: 'Fantastique' },
-        'rgba(120, 220, 180, 0.75)': { en: 'Fine', fr: 'Bien' },
-        'rgba(100, 200, 210, 0.6)': { en: 'Okay', fr: 'Correct' },
-        'rgba(140, 180, 220, 0.45)': { en: 'Low', fr: 'Bas' },
-        'rgba(160, 180, 200, 0.3)': { en: 'Down', fr: 'Abattu' }
+        'rgba(144, 238, 144, 0.9)': { en: 'Fantastic', fr: 'Fantastique', pt: 'Fantástico' },
+        'rgba(120, 220, 180, 0.75)': { en: 'Fine', fr: 'Bien', pt: 'Bem' },
+        'rgba(100, 200, 210, 0.6)': { en: 'Okay', fr: 'Correct', pt: 'Ok' },
+        'rgba(140, 180, 220, 0.45)': { en: 'Low', fr: 'Bas', pt: 'Baixo' },
+        'rgba(160, 180, 200, 0.3)': { en: 'Down', fr: 'Abattu', pt: 'Deprimido' }
     };
     
     let loggedCount = 0;
@@ -390,7 +407,8 @@ function loadYearGrid() {
             cell.classList.add('logged');
             
             const date = new Date(year, parseInt(month) - 1, parseInt(day));
-            const formattedDate = date.toLocaleDateString(currentLanguage === 'en' ? 'en-US' : 'fr-FR', 
+            const localeMap = { en: 'en-US', fr: 'fr-FR', pt: 'pt-BR' };
+            const formattedDate = date.toLocaleDateString(localeMap[currentLanguage],
                 { month: 'short', day: 'numeric' });
             const mood = moodLabels[color] ? moodLabels[color][currentLanguage] : '';
             cell.setAttribute('data-tooltip', `${formattedDate} • ${mood}`);
@@ -420,9 +438,10 @@ function checkTodayLogged() {
             const optionColor = option.dataset.color;
             if (optionColor === selectedColor) {
                 const level = option.dataset.level;
-                const label = currentLanguage === 'en' ? option.dataset.labelEn : option.dataset.labelFr;
+                const labelKey = `label${currentLanguage.charAt(0).toUpperCase() + currentLanguage.slice(1)}`;
+                const label = option.dataset[labelKey];
                 signalBars.className = 'signal-bars level-' + level;
-                
+
                 colorLabel.textContent = label;
                 colorLabel.classList.add('visible');
             }
@@ -431,9 +450,9 @@ function checkTodayLogged() {
         // Not logged yet - default to "Okay" (level 3)
         signalBars.className = 'signal-bars level-3';
         selectedColor = 'rgba(100, 200, 210, 0.6)';
-        
-        const label = currentLanguage === 'en' ? 'Okay' : 'Correct';
-        colorLabel.textContent = label;
+
+        const defaultLabels = { en: 'Okay', fr: 'Correct', pt: 'Ok' };
+        colorLabel.textContent = defaultLabels[currentLanguage];
         colorLabel.classList.add('visible');
     }
 }
