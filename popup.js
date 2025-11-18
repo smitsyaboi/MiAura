@@ -326,7 +326,7 @@ function updateStreakDisplay() {
 
     // Update Page 1 streak display
     if (currentStreakEl) {
-        currentStreakEl.innerHTML = `<span class="streak-emoji">✨</span><span class="streak-number">${streaks.currentStreak}</span>`;
+        currentStreakEl.innerHTML = `<span class="streak-emoji">🫧</span><span class="streak-number">${streaks.currentStreak}</span>`;
         currentStreakEl.className = 'streak-display';
         if (streaks.currentStreak > 0) {
             currentStreakEl.classList.add('streak-level-' + streakLevel);
@@ -340,7 +340,7 @@ function updateStreakDisplay() {
 
     // Update Page 2 compact streak display
     if (currentStreakEl2) {
-        currentStreakEl2.innerHTML = `<span class="streak-emoji">✨</span><span class="streak-number">${streaks.currentStreak}</span>`;
+        currentStreakEl2.innerHTML = `<span class="streak-emoji">🫧</span><span class="streak-number">${streaks.currentStreak}</span>`;
         currentStreakEl2.className = 'streak-display-compact';
         if (streaks.currentStreak > 0) {
             currentStreakEl2.classList.add('streak-level-' + streakLevel);
