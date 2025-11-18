@@ -658,3 +658,387 @@ button:hover {
         transform: translateX(20px);
     }
 }
+
+/* Streak Counter Styles */
+.streak-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.streak-container-page2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.streak-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(240, 240, 240, 0.7));
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow:
+        0 4px 12px rgba(0,0,0,0.15),
+        0 2px 4px rgba(0,0,0,0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    font-size: 24px;
+    font-weight: 600;
+    color: #2d4a3e;
+    transition: all 0.4s ease;
+}
+
+.streak-emoji {
+    font-size: 28px;
+    display: inline-block;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.streak-number {
+    font-size: 26px;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.longest-streak {
+    font-size: 11px;
+    color: #666;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+}
+
+/* Level 1: 1-2 days - Basic with subtle glow */
+.streak-level-1 {
+    background: linear-gradient(135deg, rgba(255, 250, 240, 0.9), rgba(255, 240, 220, 0.8));
+    box-shadow:
+        0 4px 16px rgba(255, 140, 0, 0.15),
+        0 2px 6px rgba(0,0,0,0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.streak-level-1 .streak-emoji {
+    filter: drop-shadow(0 2px 6px rgba(255, 140, 0, 0.3));
+}
+
+/* Level 2: 3-6 days - Orange glow with gentle pulse */
+.streak-level-2 {
+    background: linear-gradient(135deg, rgba(255, 245, 220, 0.95), rgba(255, 230, 180, 0.85));
+    box-shadow:
+        0 4px 20px rgba(255, 140, 0, 0.25),
+        0 2px 8px rgba(0,0,0,0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    animation: streakPulseGentle 2s ease-in-out infinite;
+}
+
+.streak-level-2 .streak-emoji {
+    filter: drop-shadow(0 2px 8px rgba(255, 140, 0, 0.4));
+    animation: emojiPulseGentle 2s ease-in-out infinite;
+}
+
+@keyframes streakPulseGentle {
+    0%, 100% {
+        box-shadow:
+            0 4px 20px rgba(255, 140, 0, 0.25),
+            0 2px 8px rgba(0,0,0,0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+    50% {
+        box-shadow:
+            0 4px 24px rgba(255, 140, 0, 0.35),
+            0 2px 10px rgba(0,0,0,0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+}
+
+@keyframes emojiPulseGentle {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 2px 8px rgba(255, 140, 0, 0.4));
+    }
+    50% {
+        transform: scale(1.05);
+        filter: drop-shadow(0 2px 12px rgba(255, 140, 0, 0.5));
+    }
+}
+
+/* Level 3: 7-13 days - Orange-red with moderate pulse */
+.streak-level-3 {
+    background: linear-gradient(135deg, rgba(255, 235, 200, 0.95), rgba(255, 200, 140, 0.9));
+    box-shadow:
+        0 5px 25px rgba(255, 100, 0, 0.35),
+        0 2px 10px rgba(0,0,0,0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    animation: streakPulseMedium 1.5s ease-in-out infinite;
+}
+
+.streak-level-3 .streak-emoji {
+    filter: drop-shadow(0 3px 10px rgba(255, 100, 0, 0.5));
+    animation: emojiPulseMedium 1.5s ease-in-out infinite;
+}
+
+@keyframes streakPulseMedium {
+    0%, 100% {
+        box-shadow:
+            0 5px 25px rgba(255, 100, 0, 0.35),
+            0 2px 10px rgba(0,0,0,0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+    50% {
+        box-shadow:
+            0 5px 30px rgba(255, 100, 0, 0.45),
+            0 2px 12px rgba(0,0,0,0.18),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+}
+
+@keyframes emojiPulseMedium {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 3px 10px rgba(255, 100, 0, 0.5));
+    }
+    50% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 3px 15px rgba(255, 100, 0, 0.6));
+    }
+}
+
+/* Level 4: 14-29 days - Red-orange with strong pulse + rotate */
+.streak-level-4 {
+    background: linear-gradient(135deg, rgba(255, 220, 180, 0.95), rgba(255, 160, 100, 0.9));
+    box-shadow:
+        0 6px 30px rgba(255, 69, 0, 0.45),
+        0 3px 12px rgba(0,0,0,0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    animation: streakPulseStrong 1.2s ease-in-out infinite;
+}
+
+.streak-level-4 .streak-emoji {
+    filter: drop-shadow(0 4px 15px rgba(255, 69, 0, 0.6));
+    animation: emojiRotatePulse 1.2s ease-in-out infinite;
+}
+
+@keyframes streakPulseStrong {
+    0%, 100% {
+        box-shadow:
+            0 6px 30px rgba(255, 69, 0, 0.45),
+            0 3px 12px rgba(0,0,0,0.18),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow:
+            0 6px 40px rgba(255, 69, 0, 0.6),
+            0 3px 16px rgba(0,0,0,0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes emojiRotatePulse {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 4px 15px rgba(255, 69, 0, 0.6));
+    }
+    25% {
+        transform: scale(1.12) rotate(-5deg);
+        filter: drop-shadow(0 4px 20px rgba(255, 69, 0, 0.7));
+    }
+    50% {
+        transform: scale(1.15) rotate(0deg);
+        filter: drop-shadow(0 4px 25px rgba(255, 69, 0, 0.8));
+    }
+    75% {
+        transform: scale(1.12) rotate(5deg);
+        filter: drop-shadow(0 4px 20px rgba(255, 69, 0, 0.7));
+    }
+}
+
+/* Level 5: 30-99 days - Red-gold with intense pulse + rotate + scale */
+.streak-level-5 {
+    background: linear-gradient(135deg, rgba(255, 200, 120, 0.98), rgba(255, 140, 60, 0.95));
+    box-shadow:
+        0 8px 40px rgba(255, 50, 0, 0.55),
+        0 4px 16px rgba(0,0,0,0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    animation: streakPulseIntense 1s ease-in-out infinite;
+}
+
+.streak-level-5 .streak-emoji {
+    filter: drop-shadow(0 5px 20px rgba(255, 50, 0, 0.75));
+    animation: emojiIntense 1s ease-in-out infinite;
+}
+
+.streak-level-5 .streak-number {
+    background: linear-gradient(135deg, #ff6b00, #ff4500, #ff8c00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: numberShine 2s linear infinite;
+}
+
+@keyframes streakPulseIntense {
+    0%, 100% {
+        box-shadow:
+            0 8px 40px rgba(255, 50, 0, 0.55),
+            0 4px 16px rgba(0,0,0,0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow:
+            0 10px 50px rgba(255, 50, 0, 0.75),
+            0 5px 20px rgba(0,0,0,0.28),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        transform: scale(1.05);
+    }
+}
+
+@keyframes emojiIntense {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 5px 20px rgba(255, 50, 0, 0.75));
+    }
+    20% {
+        transform: scale(1.2) rotate(-8deg);
+        filter: drop-shadow(0 6px 25px rgba(255, 50, 0, 0.85));
+    }
+    40% {
+        transform: scale(1.25) rotate(8deg);
+        filter: drop-shadow(0 7px 30px rgba(255, 50, 0, 0.9));
+    }
+    60% {
+        transform: scale(1.2) rotate(-5deg);
+        filter: drop-shadow(0 6px 25px rgba(255, 50, 0, 0.85));
+    }
+    80% {
+        transform: scale(1.15) rotate(5deg);
+        filter: drop-shadow(0 5px 22px rgba(255, 50, 0, 0.8));
+    }
+}
+
+@keyframes numberShine {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+/* Level 6: 100+ days - LEGENDARY rainbow with extreme effects */
+.streak-level-6 {
+    background: linear-gradient(135deg,
+        rgba(255, 180, 100, 0.98),
+        rgba(255, 120, 50, 0.95),
+        rgba(255, 200, 80, 0.98));
+    background-size: 200% 200%;
+    box-shadow:
+        0 10px 50px rgba(255, 30, 0, 0.65),
+        0 5px 20px rgba(255, 140, 0, 0.5),
+        0 0 40px rgba(255, 50, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    animation: streakLegendary 0.8s ease-in-out infinite, rainbowShift 3s linear infinite;
+}
+
+.streak-level-6 .streak-emoji {
+    filter: drop-shadow(0 6px 25px rgba(255, 30, 0, 0.9))
+            drop-shadow(0 0 15px rgba(255, 140, 0, 0.7));
+    animation: emojiLegendary 0.8s ease-in-out infinite;
+}
+
+.streak-level-6 .streak-number {
+    background: linear-gradient(135deg,
+        #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff, #ff0000);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: rainbowText 2s linear infinite;
+    font-size: 30px;
+}
+
+@keyframes streakLegendary {
+    0%, 100% {
+        box-shadow:
+            0 10px 50px rgba(255, 30, 0, 0.65),
+            0 5px 20px rgba(255, 140, 0, 0.5),
+            0 0 40px rgba(255, 50, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        transform: scale(1) rotate(0deg);
+    }
+    25% {
+        transform: scale(1.08) rotate(-2deg);
+    }
+    50% {
+        box-shadow:
+            0 12px 60px rgba(255, 30, 0, 0.85),
+            0 6px 25px rgba(255, 140, 0, 0.7),
+            0 0 50px rgba(255, 50, 0, 0.6),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        transform: scale(1.1) rotate(0deg);
+    }
+    75% {
+        transform: scale(1.08) rotate(2deg);
+    }
+}
+
+@keyframes emojiLegendary {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 6px 25px rgba(255, 30, 0, 0.9))
+                drop-shadow(0 0 15px rgba(255, 140, 0, 0.7));
+    }
+    15% {
+        transform: scale(1.3) rotate(-12deg);
+        filter: drop-shadow(0 8px 35px rgba(255, 30, 0, 1))
+                drop-shadow(0 0 25px rgba(255, 140, 0, 0.9));
+    }
+    30% {
+        transform: scale(1.35) rotate(12deg);
+        filter: drop-shadow(0 10px 40px rgba(255, 30, 0, 1))
+                drop-shadow(0 0 30px rgba(255, 140, 0, 1));
+    }
+    45% {
+        transform: scale(1.3) rotate(-8deg);
+        filter: drop-shadow(0 8px 35px rgba(255, 30, 0, 1))
+                drop-shadow(0 0 25px rgba(255, 140, 0, 0.9));
+    }
+    60% {
+        transform: scale(1.25) rotate(8deg);
+        filter: drop-shadow(0 7px 30px rgba(255, 30, 0, 0.95))
+                drop-shadow(0 0 20px rgba(255, 140, 0, 0.8));
+    }
+    75% {
+        transform: scale(1.2) rotate(-5deg);
+        filter: drop-shadow(0 6px 28px rgba(255, 30, 0, 0.92))
+                drop-shadow(0 0 18px rgba(255, 140, 0, 0.75));
+    }
+}
+
+@keyframes rainbowShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes rainbowText {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 200% 50%;
+    }
+}

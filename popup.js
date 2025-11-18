@@ -10,13 +10,21 @@ const translations = {
         title: 'Hello, how are you feeling today?',
         yearTitle: 'Your Year',
         daysLogged: 'days logged',
-        back: 'Back'
+        back: 'Back',
+        currentStreak: 'day streak',
+        currentStreakPlural: 'day streak',
+        longestStreak: 'longest',
+        streakDays: 'days'
     },
     fr: {
         title: 'Bonjour, comment allez-vous aujourd\'hui?',
         yearTitle: 'Votre Année',
         daysLogged: 'jours enregistrés',
-        back: 'Retour'
+        back: 'Retour',
+        currentStreak: 'jour de suite',
+        currentStreakPlural: 'jours de suite',
+        longestStreak: 'record',
+        streakDays: 'jours'
     }
 };
 
@@ -26,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLanguage();
     setupEventListeners();
     loadYearGrid();
+    updateStreakDisplay();
 });
 
 function updateLanguage() {
@@ -65,6 +74,9 @@ function updateLanguage() {
     if (!page1.classList.contains('active')) {
         loadYearGrid();
     }
+
+    // Update streak display for language change
+    updateStreakDisplay();
 }
 
 function toggleLanguage() {
@@ -178,18 +190,151 @@ function saveMood() {
 
     const today = getTodayDateString();
     const moodData = getMoodData();
-    
+
     moodData[today] = {
         color: selectedColor,
         timestamp: new Date().toISOString()
     };
 
     localStorage.setItem('moodTracker', JSON.stringify(moodData));
+    updateStreakDisplay();
 }
 
 function getMoodData() {
     const data = localStorage.getItem('moodTracker');
     return data ? JSON.parse(data) : {};
+}
+
+function getStreakData() {
+    const data = localStorage.getItem('streakData');
+    return data ? JSON.parse(data) : {
+        currentStreak: 0,
+        longestStreak: 0,
+        lastCheckDate: null
+    };
+}
+
+function saveStreakData(streakData) {
+    localStorage.setItem('streakData', JSON.stringify(streakData));
+}
+
+function calculateStreaks() {
+    const moodData = getMoodData();
+    const dates = Object.keys(moodData).sort();
+
+    if (dates.length === 0) {
+        return { currentStreak: 0, longestStreak: 0 };
+    }
+
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 1;
+
+    const today = getTodayDateString();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = formatDateString(yesterday);
+
+    // Calculate longest streak by checking consecutive dates
+    for (let i = 0; i < dates.length; i++) {
+        if (i > 0) {
+            const prevDate = new Date(dates[i - 1]);
+            const currDate = new Date(dates[i]);
+            const dayDiff = Math.floor((currDate - prevDate) / (1000 * 60 * 60 * 24));
+
+            if (dayDiff === 1) {
+                tempStreak++;
+            } else {
+                longestStreak = Math.max(longestStreak, tempStreak);
+                tempStreak = 1;
+            }
+        }
+    }
+    longestStreak = Math.max(longestStreak, tempStreak);
+
+    // Calculate current streak - must include today or yesterday
+    const lastLoggedDate = dates[dates.length - 1];
+    if (lastLoggedDate === today || lastLoggedDate === yesterdayStr) {
+        currentStreak = 1;
+        for (let i = dates.length - 2; i >= 0; i--) {
+            const prevDate = new Date(dates[i]);
+            const currDate = new Date(dates[i + 1]);
+            const dayDiff = Math.floor((currDate - prevDate) / (1000 * 60 * 60 * 24));
+
+            if (dayDiff === 1) {
+                currentStreak++;
+            } else {
+                break;
+            }
+        }
+    } else {
+        currentStreak = 0;
+    }
+
+    return { currentStreak, longestStreak };
+}
+
+function formatDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getStreakLevel(streak) {
+    if (streak >= 100) return 6;
+    if (streak >= 30) return 5;
+    if (streak >= 14) return 4;
+    if (streak >= 7) return 3;
+    if (streak >= 3) return 2;
+    if (streak >= 1) return 1;
+    return 0;
+}
+
+function updateStreakDisplay() {
+    const streaks = calculateStreaks();
+    const streakData = getStreakData();
+
+    // Update longest streak if current is higher
+    if (streaks.longestStreak > streakData.longestStreak) {
+        streakData.longestStreak = streaks.longestStreak;
+        saveStreakData(streakData);
+    }
+
+    const currentStreakEl = document.getElementById('currentStreak');
+    const longestStreakEl = document.getElementById('longestStreak');
+    const currentStreakEl2 = document.getElementById('currentStreak2');
+    const longestStreakEl2 = document.getElementById('longestStreak2');
+
+    const streakLevel = getStreakLevel(streaks.currentStreak);
+
+    // Update Page 1 streak display
+    if (currentStreakEl) {
+        currentStreakEl.innerHTML = `<span class="streak-emoji">🔥</span><span class="streak-number">${streaks.currentStreak}</span>`;
+        currentStreakEl.className = 'streak-display';
+        if (streaks.currentStreak > 0) {
+            currentStreakEl.classList.add('streak-level-' + streakLevel);
+        }
+    }
+
+    if (longestStreakEl) {
+        const longestText = translations[currentLanguage].longestStreak;
+        longestStreakEl.textContent = `${longestText}: ${Math.max(streaks.longestStreak, streakData.longestStreak)}`;
+    }
+
+    // Update Page 2 streak display
+    if (currentStreakEl2) {
+        currentStreakEl2.innerHTML = `<span class="streak-emoji">🔥</span><span class="streak-number">${streaks.currentStreak}</span>`;
+        currentStreakEl2.className = 'streak-display';
+        if (streaks.currentStreak > 0) {
+            currentStreakEl2.classList.add('streak-level-' + streakLevel);
+        }
+    }
+
+    if (longestStreakEl2) {
+        const longestText = translations[currentLanguage].longestStreak;
+        longestStreakEl2.textContent = `${longestText}: ${Math.max(streaks.longestStreak, streakData.longestStreak)}`;
+    }
 }
 
 // Color migration map - converts old hex colors to new rgba colors
