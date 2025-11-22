@@ -2,6 +2,67 @@
  * Component styles - Buttons, inputs, and reusable UI elements
  */
 
+ /* Vista-style bottom navigation */
+.vista-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65px;
+    background: linear-gradient(to bottom,
+        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.3) 
+    );
+    backdrop-filter: var(--blur-glass);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+        0 -2px 10px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 20px;
+    z-index: 10;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 8px 16px;
+    border-radius: 12px;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.nav-item.active {
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.nav-label {
+    font-size: 10px;
+    color: #2d4a3e;
+    font-weight: 500;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
 /* Base button styles */
 button {
     background: var(--glass-background);
@@ -284,10 +345,10 @@ button:hover {
 /* Color label */
 .color-label {
     text-align: center;
-    font-size: 16px;
+    font-size: 30px;
     color: var(--color-text-primary);
-    font-weight: 400;
-    margin-top: 25px;
+    font-weight: 450;
+    margin-top: 35px;
     min-height: 22px;
     opacity: 0;
     transition: opacity var(--transition-normal);
@@ -392,4 +453,76 @@ button:hover {
         0 4px 12px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.9);
     animation: tooltipFadeIn var(--transition-fast);
+}
+
+/* Settings page */
+.settings-section {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: var(--blur-glass);
+    border-radius: var(--border-radius-lg);
+    padding: 20px;
+    margin: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.settings-section h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d4a3e;
+    margin: 0 0 15px 0;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+.language-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.language-btn {
+    width: 100%;
+    padding: 12px 18px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.4),
+        rgba(255, 255, 255, 0.2));
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--border-radius-md);
+    color: #2d4a3e;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.language-btn:hover {
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.6),
+        rgba(255, 255, 255, 0.3));
+    transform: translateY(-2px);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.language-btn.active {
+    background: linear-gradient(135deg,
+        rgba(144, 238, 144, 0.5),
+        rgba(120, 220, 180, 0.4));
+    border-color: rgba(144, 238, 144, 0.6);
+    box-shadow:
+        0 2px 8px rgba(144, 238, 144, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.language-btn.active::after {
+    content: ' ✓';
+    float: right;
+    font-weight: bold;
 }

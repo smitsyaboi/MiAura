@@ -7,6 +7,7 @@ import { getMoodForDate, migrateColor } from './js/storage.js';
 import { getTodayDateString } from './js/dateUtils.js';
 import {
     getCurrentLanguage,
+    setCurrentLanguage,
     t,
     getToggleLabel,
     getLabelKey,
@@ -15,6 +16,7 @@ import {
 import { getSelectedColor, setSelectedColor, resetViewYear } from './js/state.js';
 import { loadYearGrid } from './js/gridRenderer.js';
 import { setupAllEventListeners } from './js/eventHandlers.js';
+import { initNavigation } from './js/navigation.js';
 
 /**
  * Updates all UI text to the current language
@@ -28,6 +30,15 @@ function updateLanguage() {
     document.getElementById('mainTitle').textContent = t('title', lang);
     document.getElementById('yearTitle').textContent = t('yearTitle', lang);
     document.getElementById('langToggle').textContent = getToggleLabel(lang);
+
+    // Update settings page text
+    document.getElementById('settingsTitle').textContent = t('settings', lang);
+    document.getElementById('languageLabel').textContent = t('language', lang);
+
+    // Update language button active states
+    document.querySelectorAll('.language-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
 
     // Update nav button icon based on which page is active
     if (page1.classList.contains('active')) {
@@ -60,6 +71,19 @@ function updateLanguage() {
     if (!page1.classList.contains('active')) {
         loadYearGrid();
     }
+}
+
+/**
+ * Sets up language selection buttons on settings page
+ */
+function setupLanguageButtons() {
+    document.querySelectorAll('.language-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const lang = btn.dataset.lang;
+            setCurrentLanguage(lang);
+            updateLanguage();
+        });
+    });
 }
 
 /**
@@ -105,8 +129,11 @@ function init() {
     checkTodayLogged();
     updateLanguage();
     setupAllEventListeners(updateLanguage);
+    setupLanguageButtons();
     loadYearGrid();
+    initNavigation();
 }
 
 // Start the application when DOM is ready
 document.addEventListener('DOMContentLoaded', init);
+

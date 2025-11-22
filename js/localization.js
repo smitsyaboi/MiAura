@@ -17,19 +17,25 @@ export const translations = {
         title: 'Hello, how are you feeling today?',
         yearTitle: 'Year',
         daysLogged: 'days logged',
-        back: 'Back'
+        back: 'Back',
+        settings: 'Settings',
+        language: 'Language'
     },
     fr: {
         title: 'Bonjour, comment allez-vous aujourd\'hui?',
         yearTitle: 'Annee',
         daysLogged: 'jours enregistres',
-        back: 'Retour'
+        back: 'Retour',
+        settings: 'Parametres',
+        language: 'Langue'
     },
     pt: {
         title: 'Ola, como voce esta se sentindo hoje?',
         yearTitle: 'Ano',
         daysLogged: 'dias registrados',
-        back: 'Voltar'
+        back: 'Voltar',
+        settings: 'Configuracoes',
+        language: 'Idioma'
     }
 };
 
