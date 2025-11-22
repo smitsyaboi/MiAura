@@ -4,18 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MiAura</title>
-    <link rel="stylesheet" href="popup.css">
+    <!-- Modular CSS -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/signal-levels.css">
+    <link rel="stylesheet" href="css/animations.css">
 </head>
 <body>
     <div class="container">
         <div class="xp-content">
             <button class="language-toggle" id="langToggle">FR</button>
-            <button class="back-button" id="navBtn">📅</button>
+            <button class="back-button" id="navBtn">&#x1F4C5;</button>
 
         <!-- Page 1: Mood Selection -->
         <div id="page1" class="page active">
             <h1 id="mainTitle">Hello, how are you feeling today?</h1>
-            
+
             <div class="orb-container">
                 <div class="signal-frame">
                     <div class="signal-bars level-3" id="signalBars">
@@ -27,7 +32,7 @@
                     </div>
                 </div>
             </div>
-            
+
 <div class="color-grid">
     <div class="color-option"
          style="background: radial-gradient(ellipse at 30% 30%, rgba(200, 245, 200, 0.95), rgba(144, 238, 144, 0.85));"
@@ -35,8 +40,8 @@
          data-level="1"
          data-label-en="Fantastic"
          data-label-fr="Fantastique"
-         data-label-pt="Fantástico"></div>
-    
+         data-label-pt="Fantastico"></div>
+
     <div class="color-option"
          style="background: radial-gradient(ellipse at 30% 30%, rgba(170, 235, 200, 0.8), rgba(120, 220, 180, 0.7));"
          data-color="rgba(120, 220, 180, 0.75)"
@@ -44,7 +49,7 @@
          data-label-en="Fine"
          data-label-fr="Bien"
          data-label-pt="Bem"></div>
-    
+
     <div class="color-option"
          style="background: radial-gradient(ellipse at 30% 30%, rgba(150, 220, 230, 0.65), rgba(100, 200, 210, 0.55));"
          data-color="rgba(100, 200, 210, 0.6)"
@@ -52,7 +57,7 @@
          data-label-en="Okay"
          data-label-fr="Correct"
          data-label-pt="Ok"></div>
-    
+
     <div class="color-option"
          style="background: radial-gradient(ellipse at 30% 30%, rgba(180, 200, 235, 0.5), rgba(140, 180, 220, 0.4));"
          data-color="rgba(140, 180, 220, 0.45)"
@@ -60,7 +65,7 @@
          data-label-en="Low"
          data-label-fr="Bas"
          data-label-pt="Baixo"></div>
-    
+
     <div class="color-option"
          style="background: radial-gradient(ellipse at 30% 30%, rgba(190, 200, 215, 0.35), rgba(160, 180, 200, 0.25));"
          data-color="rgba(160, 180, 200, 0.3)"
@@ -68,7 +73,7 @@
          data-label-en="Down"
          data-label-fr="Abattu"
          data-label-pt="Deprimido"></div>
-</div>    
+</div>
     <div class="color-label" id="colorLabel"></div>
     </div>
 
@@ -77,16 +82,16 @@
             <h1 id="yearTitle">Your Year</h1>
             <div class="stats">
                 <div class="year-nav">
-                <button class="year-arrow" id="prevYear">◀</button>
+                <button class="year-arrow" id="prevYear">&#9664;</button>
                 </div>
                 <span id="yearDisplay">2025</span>
-                <button class="year-arrow" id="nextYear">▶</button>
+                <button class="year-arrow" id="nextYear">&#9654;</button>
                 <span id="loggedDays">0 days logged</span>
             </div>
             <div class="year-grid" id="yearGrid"></div>
         </div>
         </div>
     </div>
-    <script src="popup.js"></script>
+    <script type="module" src="popup.js"></script>
 </body>
 </html>
