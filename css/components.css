@@ -40,21 +40,33 @@ button:hover {
 }
 
 /* Year navigation */
-.year-nav {
-    display: flex;
+.year-nav-container {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: var(--blur-glass);
+    border-radius: var(--border-radius-lg);
+    padding: 4px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        0 1px 4px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        var(--shadow-inset-depth);
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px; /* Space between buttons and year display */
 }
 
 .year-arrow {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(240, 245, 242, 0.6));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(240, 245, 242, 0.3));
     backdrop-filter: var(--blur-soft);
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: var(--border-radius-pill);
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     padding: 0;
-    font-size: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
     cursor: pointer;
     transition: all var(--transition-fast);
     display: flex;
@@ -82,9 +94,69 @@ button:hover {
 }
 
 #yearDisplay {
-    font-weight: 500;
+    font-size: 20px;
+    font-weight: 700;
+    min-width: 40px;
+    text-align: center;
+    color: #2d4a3e;
+}
+
+.year-header {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 10px;
+    min-height: 40px;
+}
+
+.year-title-nav {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#yearTitle {
+    position: absolute;
+    left: 2.5px;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #2d4a3e;
+}
+
+#loggedDays {
+    position: absolute;
+    right: 2.5px;
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
     min-width: 45px;
     text-align: center;
+}
+
+.days-main {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+}
+
+.days-count {
+    font-size: 20px;
+    font-weight: 700;
+    color: #000000a6;
+    line-height: 1;
+}
+
+.days-word {
+    font-size: 11px;
+    font-weight: 600;
+    color: #2d4a3e;
+    line-height: 1;
 }
 
 /* Signal bars container */
@@ -238,7 +310,7 @@ button:hover {
     box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.08),
         0 1px 4px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
         var(--shadow-inset-depth);
     justify-content: center;
     position: relative;

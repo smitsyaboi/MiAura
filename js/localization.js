@@ -15,19 +15,19 @@ export const SUPPORTED_LANGUAGES = ['en', 'fr', 'pt'];
 export const translations = {
     en: {
         title: 'Hello, how are you feeling today?',
-        yearTitle: 'Your Year',
+        yearTitle: 'Year',
         daysLogged: 'days logged',
         back: 'Back'
     },
     fr: {
         title: 'Bonjour, comment allez-vous aujourd\'hui?',
-        yearTitle: 'Votre Annee',
+        yearTitle: 'Annee',
         daysLogged: 'jours enregistres',
         back: 'Retour'
     },
     pt: {
         title: 'Ola, como voce esta se sentindo hoje?',
-        yearTitle: 'Seu Ano',
+        yearTitle: 'Ano',
         daysLogged: 'dias registrados',
         back: 'Voltar'
     }

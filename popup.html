@@ -79,17 +79,18 @@
 
         <!-- Page 2: Year Calendar -->
         <div id="page2" class="page">
-            <h1 id="yearTitle">Your Year</h1>
-            <div class="stats">
-                <div class="year-nav">
-                <button class="year-arrow" id="prevYear">&#9664;</button>
+            <div class="year-header">
+                <div class="year-title-nav">
+                    <h1 id="yearTitle">Your Year</h1>
+                    <div class="year-nav-container">
+                        <button class="year-arrow" id="prevYear">‹</button>
+                        <span id="yearDisplay">2025</span>
+                        <button class="year-arrow" id="nextYear">›</button>
+                    </div>
                 </div>
-                <span id="yearDisplay">2025</span>
-                <button class="year-arrow" id="nextYear">&#9654;</button>
                 <span id="loggedDays">0 days logged</span>
             </div>
             <div class="year-grid" id="yearGrid"></div>
-        </div>
         </div>
     </div>
     <script type="module" src="popup.js"></script>

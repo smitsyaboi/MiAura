@@ -83,9 +83,14 @@ export function updateYearStats(loggedCount) {
         yearDisplay.textContent = getViewYear();
     }
 
-    if (loggedDays) {
-        loggedDays.textContent = `${loggedCount} ${t('daysLogged', language)}`;
-    }
+if (loggedDays) {
+    const daysText = t('daysLogged', language).split(' ');
+    loggedDays.innerHTML = `
+        <span class="days-count">${loggedCount}</span>
+        <span class="days-word">${daysText[0]}</span>
+    `;
+    loggedDays.title = t('daysLogged', language); // Tooltip shows full text
+}
 }
 
 /**

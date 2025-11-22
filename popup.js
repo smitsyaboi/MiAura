@@ -52,7 +52,7 @@ function updateLanguage() {
     if (loggedDaysEl.textContent) {
         const count = loggedDaysEl.textContent.match(/\d+/);
         if (count) {
-            loggedDaysEl.textContent = `${count[0]} ${t('daysLogged', lang)}`;
+            loggedDaysEl.innerHTML = `${count[0]}<br>${t('daysLogged', lang)}`; // Changed to innerHTML with <br>
         }
     }
 
