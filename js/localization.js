@@ -17,25 +17,49 @@ export const translations = {
         title: 'Hello, how are you feeling today?',
         yearTitle: 'Year',
         daysLogged: 'days logged',
+        dayStreak: 'streak',
         back: 'Back',
         settings: 'Settings',
-        language: 'Language'
+        language: 'Language',
+        view: 'View',
+        counter: 'Counter',
+        streak: 'Streak',
+        total: 'Total',
+        testMode: 'Test Mode',
+        dataExport: 'Data Export',
+        comingSoon: 'Coming Soon ✨'
     },
     fr: {
         title: 'Bonjour, comment allez-vous aujourd\'hui?',
         yearTitle: 'Annee',
         daysLogged: 'jours enregistres',
+        dayStreak: 'serie',
         back: 'Retour',
         settings: 'Parametres',
-        language: 'Langue'
+        language: 'Langue',
+        view: 'Vue',
+        counter: 'Compteur',
+        streak: 'Serie',
+        total: 'Total',
+        testMode: 'Mode Test',
+        dataExport: 'Exportation',
+        comingSoon: 'Bientot disponible ✨'
     },
     pt: {
         title: 'Ola, como voce esta se sentindo hoje?',
         yearTitle: 'Ano',
         daysLogged: 'dias registrados',
+        dayStreak: 'sequencia',
         back: 'Voltar',
         settings: 'Configuracoes',
-        language: 'Idioma'
+        language: 'Idioma',
+        view: 'Vista',
+        counter: 'Contador',
+        streak: 'Sequencia',
+        total: 'Total',
+        testMode: 'Modo de Teste',
+        dataExport: 'Exportar Dados',
+        comingSoon: 'Em breve ✨'
     }
 };
 
@@ -49,6 +73,26 @@ export const moodLabels = {
     'rgba(140, 180, 220, 0.45)': { en: 'Low', fr: 'Bas', pt: 'Baixo' },
     'rgba(160, 180, 200, 0.3)': { en: 'Down', fr: 'Abattu', pt: 'Deprimido' }
 };
+
+/**
+ * Maps mood colors to levels (1-5, matching signal bars)
+ */
+const moodLevels = {
+    'rgba(144, 238, 144, 0.9)': 1,
+    'rgba(120, 220, 180, 0.75)': 2,
+    'rgba(100, 200, 210, 0.6)': 3,
+    'rgba(140, 180, 220, 0.45)': 4,
+    'rgba(160, 180, 200, 0.3)': 5
+};
+
+/**
+ * Gets the mood level (1-5) for a color
+ * @param {string} color - The mood color
+ * @returns {number} - Level 1-5, or 3 as default
+ */
+export function getMoodLevel(color) {
+    return moodLevels[color] || 3;
+}
 
 /**
  * Default mood labels when nothing is logged
