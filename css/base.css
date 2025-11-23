@@ -39,7 +39,7 @@ h1 {
     margin: 0 0 30px 0;
     font-size: 20px;
     color: var(--color-text-primary);
-    font-weight: 300;
+    font-weight: 600;
     text-shadow: var(--text-shadow-light);
     letter-spacing: 0.3px;
 }
@@ -54,6 +54,17 @@ h1 {
 .page.active {
     display: block;
     animation: fadeSlideIn 0.3s ease-out;
+}
+
+/* Settings page scrolls only when test mode is visible */
+#page3.active {
+    height: calc(100% - 50px);
+    overflow-y: hidden;
+    padding-bottom: 20px;
+}
+
+#page3.active.scrollable {
+    overflow-y: auto;
 }
 
 /* Stats section */

@@ -79,17 +79,81 @@
 
         <!-- Page 2: Year Calendar -->
         <div id="page2" class="page">
-            <h1 id="yearTitle">Your Year</h1>
-            <div class="stats">
-                <div class="year-nav">
-                <button class="year-arrow" id="prevYear">&#9664;</button>
+            <div class="year-header">
+                <div class="year-nav-row">
+                    <div class="year-nav-container">
+                        <button class="year-arrow" id="prevYear">‹</button>
+                        <span id="yearDisplay">2025</span>
+                        <button class="year-arrow" id="nextYear">›</button>
+                    </div>
+                    <span id="loggedDays">0 days</span>
                 </div>
-                <span id="yearDisplay">2025</span>
-                <button class="year-arrow" id="nextYear">&#9654;</button>
-                <span id="loggedDays">0 days logged</span>
             </div>
             <div class="year-grid" id="yearGrid"></div>
         </div>
+
+        <!-- Page 3: Settings -->
+        <div id="page3" class="page">
+            <h1 id="settingsTitle">Settings</h1>
+
+            <div class="settings-section settings-compact">
+                <div class="settings-row">
+                    <span class="settings-label" id="calendarViewLabel">View</span>
+                    <div class="view-toggle">
+                        <button class="view-btn" data-view="year" id="viewYear">Y</button>
+                        <button class="view-btn" data-view="month" id="viewMonth">M</button>
+                        <button class="view-btn" data-view="week" id="viewWeek">W</button>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label" id="counterModeLabel">Counter</span>
+                    <div class="view-toggle">
+                        <button class="view-btn" data-mode="streak" id="streakBtn">
+                            <span id="streakTitle">Streak</span>
+                        </button>
+                        <button class="view-btn" data-mode="total" id="totalBtn">
+                            <span id="totalTitle">Total</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section settings-compact">
+                <div class="settings-row">
+                    <span class="settings-label" id="languageLabel">Language</span>
+                    <select class="settings-select" id="languageSelect">
+                        <option value="en">English</option>
+                        <option value="fr">Francais</option>
+                        <option value="pt">Portugues</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2 id="exportLabel">Data Export</h2>
+                <div class="coming-soon" id="exportComingSoon">Coming Soon</div>
+            </div>
+
+            <div class="settings-section test-section">
+                <h2 id="testModeLabel">Test Mode</h2>
+                <div class="test-controls">
+                    <input type="number" id="testStreakInput" min="1" max="365" value="7" class="test-input">
+                    <button class="test-btn" id="setTestStreak">Set</button>
+                    <button class="test-btn test-btn-clear" id="clearTestStreak">Clear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vista-nav">
+        <div class="nav-item active" id="navToday">
+            <div class="nav-icon">📝</div>
+        </div>
+        <div class="nav-item" id="navCalendar">
+            <div class="nav-icon">📅</div>
+        </div>
+        <div class="nav-item" id="navSettings">
+            <div class="nav-icon">⚙️</div>
         </div>
     </div>
     <script type="module" src="popup.js"></script>

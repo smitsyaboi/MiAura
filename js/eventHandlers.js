@@ -2,10 +2,10 @@
  * Event handlers module - organized event listener setup
  */
 
-import { saveMoodForDate } from './storage.js';
+import { saveMoodForDate, getCalendarView } from './storage.js';
 import { getTodayDateString } from './dateUtils.js';
-import { cycleLanguage, getCurrentLanguage, getLabelKey, getToggleLabel } from './localization.js';
-import { getSelectedColor, setSelectedColor, incrementViewYear, decrementViewYear } from './state.js';
+import { cycleLanguage, getLabelKey } from './localization.js';
+import { getSelectedColor, setSelectedColor, incrementViewYear, decrementViewYear, incrementViewMonth, decrementViewMonth, incrementViewWeek, decrementViewWeek } from './state.js';
 import { loadYearGrid } from './gridRenderer.js';
 
 /**
@@ -43,22 +43,36 @@ export function setupLanguageToggle(onLanguageChange) {
 }
 
 /**
- * Sets up year navigation buttons
+ * Sets up calendar navigation buttons (handles year/month/week based on view)
  */
 export function setupYearNavigation() {
-    const prevYear = document.getElementById('prevYear');
-    const nextYear = document.getElementById('nextYear');
+    const prevBtn = document.getElementById('prevYear');
+    const nextBtn = document.getElementById('nextYear');
 
-    if (prevYear) {
-        prevYear.addEventListener('click', () => {
-            decrementViewYear();
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            const view = getCalendarView();
+            if (view === 'month') {
+                decrementViewMonth();
+            } else if (view === 'week') {
+                decrementViewWeek();
+            } else {
+                decrementViewYear();
+            }
             loadYearGrid();
         });
     }
 
-    if (nextYear) {
-        nextYear.addEventListener('click', () => {
-            incrementViewYear();
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const view = getCalendarView();
+            if (view === 'month') {
+                incrementViewMonth();
+            } else if (view === 'week') {
+                incrementViewWeek();
+            } else {
+                incrementViewYear();
+            }
             loadYearGrid();
         });
     }
