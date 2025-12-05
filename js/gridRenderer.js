@@ -6,6 +6,24 @@ import { getMoodData, migrateColor, getCounterMode, calculateStreak, getStreakHe
 import { generateYearDates, getTodayDateString, formatDateForDisplay, formatDateString } from './dateUtils.js';
 import { getCurrentLanguage, getMoodLabel, getMoodLevel, t } from './localization.js';
 import { getViewYear, getActualYear, getViewMonth, getViewWeekStart } from './state.js';
+import { getActiveColors } from './colorTemplates.js';
+
+/**
+ * Get the current template's color for a given mood level
+ * @param {number} level - Mood level (1-5)
+ * @returns {string} RGBA color string for the current template
+ */
+function getColorForLevel(level) {
+    const activeColors = getActiveColors();
+    const colorMap = {
+        1: activeColors.fantastic,
+        2: activeColors.fine,
+        3: activeColors.okay,
+        4: activeColors.low,
+        5: activeColors.down
+    };
+    return colorMap[level]?.rgba || activeColors.okay.rgba;
+}
 
 /**
  * Creates a single day cell element
@@ -24,13 +42,18 @@ function createDayCell(dateString, date, moodEntry, isToday) {
     }
 
     if (moodEntry) {
-        const color = migrateColor(moodEntry.color);
-        cell.style.background = color;
+        const storedColor = migrateColor(moodEntry.color);
+        // Get the mood level from the stored color
+        const level = getMoodLevel(storedColor);
+        // Get the current template's color for this level
+        const currentColor = getColorForLevel(level);
+
+        cell.style.background = currentColor;
         cell.classList.add('logged');
 
         const language = getCurrentLanguage();
         const formattedDate = formatDateForDisplay(date, language);
-        const mood = getMoodLabel(color, language);
+        const mood = getMoodLabel(currentColor, language);
         cell.setAttribute('data-tooltip', `${formattedDate} • ${mood}`);
     }
 
@@ -136,17 +159,22 @@ function createLargeDayCell(_dateString, date, moodEntry, isToday, viewMode) {
     cell.appendChild(dayNum);
 
     if (moodEntry) {
-        const color = migrateColor(moodEntry.color);
-        cell.style.background = color;
+        const storedColor = migrateColor(moodEntry.color);
+        // Get the mood level from the stored color
+        const level = getMoodLevel(storedColor);
+        // Get the current template's color for this level
+        const currentColor = getColorForLevel(level);
+
+        cell.style.background = currentColor;
         cell.classList.add('logged');
 
         const language = getCurrentLanguage();
-        const mood = getMoodLabel(color, language);
+        const mood = getMoodLabel(currentColor, language);
         cell.setAttribute('data-tooltip', mood);
 
         // Set mood level for bar graph height in week view
         if (viewMode === 'week') {
-            cell.dataset.level = getMoodLevel(color);
+            cell.dataset.level = level;
         }
     }
 

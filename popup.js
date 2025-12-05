@@ -11,13 +11,14 @@ import {
     t,
     getToggleLabel,
     getLabelKey,
-    defaultMoodLabels
+    defaultMoodLabels,
+    getMoodLevel
 } from './js/localization.js';
 import { getSelectedColor, setSelectedColor, resetViewYear } from './js/state.js';
 import { loadYearGrid } from './js/gridRenderer.js';
 import { setupAllEventListeners } from './js/eventHandlers.js';
 import { initNavigation } from './js/navigation.js';
-import { getCurrentTemplate, applyTemplate } from './js/colorTemplates.js';
+import { getCurrentTemplate, applyTemplate, getActiveColors } from './js/colorTemplates.js';
 
 /**
  * Updates all UI text to the current language
@@ -214,16 +215,27 @@ function checkTodayLogged() {
     const colorLabel = document.getElementById('colorLabel');
     const signalBars = document.getElementById('signalBars');
     const lang = getCurrentLanguage();
+    const activeColors = getActiveColors();
 
     if (todayMood) {
-        // Today is logged - show that mood
-        const color = migrateColor(todayMood.color);
-        setSelectedColor(color);
+        // Today is logged - show that mood using current template colors
+        const storedColor = migrateColor(todayMood.color);
+        const level = getMoodLevel(storedColor);
+
+        // Get the current template's color for this level
+        const colorMap = {
+            1: activeColors.fantastic,
+            2: activeColors.fine,
+            3: activeColors.okay,
+            4: activeColors.low,
+            5: activeColors.down
+        };
+        const currentColor = colorMap[level]?.rgba || activeColors.okay.rgba;
+        setSelectedColor(currentColor);
 
         document.querySelectorAll('.color-option').forEach((option) => {
             const optionColor = option.dataset.color;
-            if (optionColor === color) {
-                const level = option.dataset.level;
+            if (optionColor === currentColor) {
                 const labelKey = getLabelKey(lang);
                 const label = option.dataset[labelKey];
                 signalBars.className = 'signal-bars level-' + level;
@@ -232,9 +244,9 @@ function checkTodayLogged() {
             }
         });
     } else {
-        // Not logged yet - default to "Okay" (level 3)
+        // Not logged yet - default to "Okay" (level 3) using current template
         signalBars.className = 'signal-bars level-3';
-        setSelectedColor('rgba(100, 200, 210, 0.6)');
+        setSelectedColor(activeColors.okay.rgba);
         colorLabel.textContent = defaultMoodLabels[lang];
         colorLabel.classList.add('visible');
     }
