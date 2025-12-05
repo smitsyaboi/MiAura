@@ -18,7 +18,8 @@ import { getSelectedColor, setSelectedColor, resetViewYear } from './js/state.js
 import { loadYearGrid } from './js/gridRenderer.js';
 import { setupAllEventListeners } from './js/eventHandlers.js';
 import { initNavigation } from './js/navigation.js';
-import { getCurrentTemplate, applyTemplate, getActiveColors } from './js/colorTemplates.js';
+import { getCurrentTemplate, applyTemplate, getActiveColors, colorTemplates } from './js/colorTemplates.js';
+import { isTemplateUnlocked, grantPremiumAccess, revokePremiumAccess } from './js/licensing.js';
 
 /**
  * Updates all UI text to the current language
@@ -193,16 +194,90 @@ function setupTestControls() {
 
     // Color template selector
     if (templateSelect) {
+        // Populate dropdown with templates (dynamic to show lock status)
+        templateSelect.innerHTML = '';
+        Object.entries(colorTemplates).forEach(([key, template]) => {
+            const option = document.createElement('option');
+            option.value = key;
+
+            const isLocked = template.premium && !isTemplateUnlocked(key);
+            const lockIcon = isLocked ? '🔒 ' : '';
+            option.textContent = `${lockIcon}${template.name}`;
+
+            if (isLocked) {
+                option.setAttribute('data-locked', 'true');
+            }
+
+            templateSelect.appendChild(option);
+        });
+
         // Set current template
         const currentTemplate = getCurrentTemplate();
         templateSelect.value = currentTemplate;
 
         templateSelect.addEventListener('change', (e) => {
             const selectedTemplate = e.target.value;
+            const template = colorTemplates[selectedTemplate];
+
+            // Check if template is locked
+            if (template.premium && !isTemplateUnlocked(selectedTemplate)) {
+                // Show upgrade message
+                alert('🔒 Premium Template\n\nThis template requires premium access.\n\nFor testing: Use the "Unlock Premium" button below.');
+                // Revert to current template
+                templateSelect.value = getCurrentTemplate();
+                return;
+            }
+
             applyTemplate(selectedTemplate);
             // Reload the grid to apply new colors to existing moods
             loadYearGrid();
         });
+    }
+
+    // Add premium unlock controls (for testing/demo)
+    const unlockBtn = document.createElement('button');
+    unlockBtn.textContent = 'Unlock Premium (Test)';
+    unlockBtn.className = 'test-btn';
+    unlockBtn.style.marginTop = '8px';
+    unlockBtn.addEventListener('click', () => {
+        grantPremiumAccess();
+        // Refresh the dropdown
+        setupTestControls();
+        alert('✨ Premium unlocked! All templates are now available.');
+    });
+
+    const lockBtn = document.createElement('button');
+    lockBtn.textContent = 'Lock Premium (Test)';
+    lockBtn.className = 'test-btn test-btn-clear';
+    lockBtn.style.marginTop = '8px';
+    lockBtn.addEventListener('click', () => {
+        revokePremiumAccess();
+        // Refresh the dropdown
+        setupTestControls();
+        // Reset to default template if current is locked
+        const current = getCurrentTemplate();
+        if (colorTemplates[current]?.premium) {
+            applyTemplate('default');
+        }
+        alert('🔒 Premium locked. Only free templates available.');
+    });
+
+    if (testSection && templateSelect) {
+        const templateSelector = templateSelect.closest('.template-selector');
+        const btnContainer = document.createElement('div');
+        btnContainer.style.display = 'flex';
+        btnContainer.style.gap = '8px';
+        btnContainer.className = 'premium-test-controls';
+
+        // Remove existing controls if they exist
+        const existing = templateSelector.querySelector('.premium-test-controls');
+        if (existing) {
+            existing.remove();
+        }
+
+        btnContainer.appendChild(unlockBtn);
+        btnContainer.appendChild(lockBtn);
+        templateSelector.appendChild(btnContainer);
     }
 }
 

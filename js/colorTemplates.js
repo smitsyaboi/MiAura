@@ -6,6 +6,7 @@
 export const colorTemplates = {
     default: {
         name: 'Default',
+        premium: false,
         background: 'radial-gradient(ellipse at center, #f8f8f8, #e8e8e8)',
         textPrimary: '#2d4a3e',
         textSecondary: '#666',
@@ -68,6 +69,7 @@ export const colorTemplates = {
     },
     ocean: {
         name: 'Ocean',
+        premium: false,
         background: 'radial-gradient(ellipse at center, #e6f3ff, #d0e8ff)',
         textPrimary: '#1e3a5f',
         textSecondary: '#4a6b8a',
@@ -130,6 +132,7 @@ export const colorTemplates = {
     },
     sunset: {
         name: 'Sunset',
+        premium: true,
         background: 'radial-gradient(ellipse at center, #fff5e6, #ffe8d0)',
         textPrimary: '#5a3a2d',
         textSecondary: '#8a6a5a',
@@ -192,6 +195,7 @@ export const colorTemplates = {
     },
     forest: {
         name: 'Forest',
+        premium: true,
         background: 'radial-gradient(ellipse at center, #f0f5e8, #e5eed0)',
         textPrimary: '#2d4a2d',
         textSecondary: '#5a6a4a',
@@ -254,6 +258,7 @@ export const colorTemplates = {
     },
     lavender: {
         name: 'Lavender',
+        premium: true,
         background: 'radial-gradient(ellipse at center, #f8f0ff, #ede0ff)',
         textPrimary: '#4a3a5a',
         textSecondary: '#6a5a7a',
@@ -316,6 +321,7 @@ export const colorTemplates = {
     },
     goc: {
         name: 'GoC',
+        premium: true,
         background: 'radial-gradient(ellipse at center, #ffffff, #f5f5f5)',
         textPrimary: '#26374A',
         textSecondary: '#4d5d6c',
@@ -378,6 +384,7 @@ export const colorTemplates = {
     },
     veteran: {
         name: 'Veteran',
+        premium: true,
         background: 'radial-gradient(ellipse at center, #e8e5dc, #d4d0c4)',
         textPrimary: '#3a4a2a',
         textSecondary: '#5a5a4a',

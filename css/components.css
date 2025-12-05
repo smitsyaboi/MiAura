@@ -1030,3 +1030,16 @@ button:hover {
     border-color: rgba(255, 150, 100, 0.8);
     box-shadow: 0 0 0 2px rgba(255, 150, 100, 0.2);
 }
+
+/* Locked template options */
+.template-select option[data-locked="true"] {
+    color: #999;
+    font-style: italic;
+}
+
+/* Premium test controls */
+.premium-test-controls {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 150, 100, 0.2);
+}
