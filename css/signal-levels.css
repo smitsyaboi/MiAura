@@ -8,12 +8,9 @@
 .signal-bars.level-1 .bar-3,
 .signal-bars.level-1 .bar-4,
 .signal-bars.level-1 .bar-5 {
-    background: linear-gradient(to bottom,
-        rgba(200, 245, 200, 0.95),
-        rgba(144, 238, 144, 0.9) 50%,
-        rgba(120, 220, 120, 0.85) 100%);
+    background: var(--mood-fantastic);
     box-shadow:
-        0 4px 20px rgba(144, 238, 144, 0.6),
+        0 4px 20px color-mix(in srgb, var(--mood-fantastic) 60%, transparent),
         0 2px 8px rgba(0, 0, 0, 0.1),
         inset 0 2px 8px rgba(255, 255, 255, 0.6),
         inset 0 -2px 8px rgba(0, 0, 0, 0.15);
@@ -30,12 +27,9 @@
 .signal-bars.level-2 .bar-2,
 .signal-bars.level-2 .bar-3,
 .signal-bars.level-2 .bar-4 {
-    background: linear-gradient(to bottom,
-        rgba(170, 235, 200, 0.8),
-        rgba(120, 220, 180, 0.75) 50%,
-        rgba(100, 205, 165, 0.7) 100%);
+    background: var(--mood-fine);
     box-shadow:
-        0 4px 18px rgba(120, 220, 180, 0.5),
+        0 4px 18px color-mix(in srgb, var(--mood-fine) 50%, transparent),
         0 2px 8px rgba(0, 0, 0, 0.1),
         inset 0 2px 8px rgba(255, 255, 255, 0.5),
         inset 0 -2px 8px rgba(0, 0, 0, 0.15);
@@ -51,12 +45,9 @@
 .signal-bars.level-3 .bar-1,
 .signal-bars.level-3 .bar-2,
 .signal-bars.level-3 .bar-3 {
-    background: linear-gradient(to bottom,
-        rgba(150, 220, 230, 0.65),
-        rgba(100, 200, 210, 0.6) 50%,
-        rgba(80, 185, 200, 0.55) 100%);
+    background: var(--mood-okay);
     box-shadow:
-        0 4px 16px rgba(100, 200, 210, 0.45),
+        0 4px 16px color-mix(in srgb, var(--mood-okay) 45%, transparent),
         0 2px 8px rgba(0, 0, 0, 0.1),
         inset 0 2px 8px rgba(255, 255, 255, 0.45),
         inset 0 -2px 8px rgba(0, 0, 0, 0.15);
@@ -71,12 +62,9 @@
 /* Level 4: Low - Soft blue */
 .signal-bars.level-4 .bar-1,
 .signal-bars.level-4 .bar-2 {
-    background: linear-gradient(to bottom,
-        rgba(180, 200, 235, 0.5),
-        rgba(140, 180, 220, 0.45) 50%,
-        rgba(120, 165, 210, 0.4) 100%);
+    background: var(--mood-low);
     box-shadow:
-        0 3px 14px rgba(140, 180, 220, 0.35),
+        0 3px 14px color-mix(in srgb, var(--mood-low) 35%, transparent),
         0 2px 8px rgba(0, 0, 0, 0.1),
         inset 0 2px 8px rgba(255, 255, 255, 0.4),
         inset 0 -2px 8px rgba(0, 0, 0, 0.15);
@@ -90,12 +78,9 @@
 
 /* Level 5: Down - Misty blue-grey */
 .signal-bars.level-5 .bar-1 {
-    background: linear-gradient(to bottom,
-        rgba(190, 200, 215, 0.35),
-        rgba(160, 180, 200, 0.3) 50%,
-        rgba(145, 165, 190, 0.25) 100%);
+    background: var(--mood-down);
     box-shadow:
-        0 2px 12px rgba(160, 180, 200, 0.25),
+        0 2px 12px color-mix(in srgb, var(--mood-down) 25%, transparent),
         0 2px 8px rgba(0, 0, 0, 0.08),
         inset 0 2px 8px rgba(255, 255, 255, 0.35),
         inset 0 -2px 8px rgba(0, 0, 0, 0.12);

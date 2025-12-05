@@ -313,6 +313,130 @@ export const colorTemplates = {
                 }
             }
         }
+    },
+    goc: {
+        name: 'GoC',
+        background: 'radial-gradient(ellipse at center, #ffffff, #f5f5f5)',
+        textPrimary: '#26374A',
+        textSecondary: '#4d5d6c',
+        containerGradient: 'linear-gradient(0deg, rgb(255 0 0 / 12%), rgb(38 55 74 / 25%))',
+        glassBackground: 'linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(245, 245, 245, 0.75))',
+        glassBackgroundHover: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(250, 250, 250, 0.85))',
+        glassBorder: '1px solid rgba(255, 255, 255, 0.95)',
+        colors: {
+            fantastic: {
+                rgba: 'rgba(255, 80, 80, 0.9)',
+                gradient: 'radial-gradient(ellipse at 30% 30%, rgba(255, 120, 120, 0.95), rgba(255, 80, 80, 0.85))',
+                level: 1,
+                labels: {
+                    en: 'Fantastic',
+                    fr: 'Fantastique',
+                    pt: 'Fantastico'
+                }
+            },
+            fine: {
+                rgba: 'rgba(255, 100, 100, 0.75)',
+                gradient: 'radial-gradient(ellipse at 30% 30%, rgba(255, 130, 130, 0.85), rgba(255, 100, 100, 0.7))',
+                level: 2,
+                labels: {
+                    en: 'Fine',
+                    fr: 'Bien',
+                    pt: 'Bem'
+                }
+            },
+            okay: {
+                rgba: 'rgba(180, 190, 210, 0.6)',
+                gradient: 'radial-gradient(ellipse at 30% 30%, rgba(200, 210, 230, 0.7), rgba(180, 190, 210, 0.55))',
+                level: 3,
+                labels: {
+                    en: 'Okay',
+                    fr: 'Okay',
+                    pt: 'Ok'
+                }
+            },
+            low: {
+                rgba: 'rgba(120, 140, 170, 0.45)',
+                gradient: 'radial-gradient(ellipse at 30% 30%, rgba(150, 170, 195, 0.55), rgba(120, 140, 170, 0.4))',
+                level: 4,
+                labels: {
+                    en: 'Low',
+                    fr: 'Bas',
+                    pt: 'Baixo'
+                }
+            },
+            down: {
+                rgba: 'rgba(90, 105, 130, 0.3)',
+                gradient: 'radial-gradient(ellipse at 30% 30%, rgba(110, 125, 150, 0.4), rgba(90, 105, 130, 0.25))',
+                level: 5,
+                labels: {
+                    en: 'Down',
+                    fr: 'Mal',
+                    pt: 'Mal'
+                }
+            }
+        }
+    },
+    veteran: {
+        name: 'Veteran',
+        background: 'radial-gradient(ellipse at center, #e8e5dc, #d4d0c4)',
+        textPrimary: '#3a4a2a',
+        textSecondary: '#5a5a4a',
+        containerGradient: 'linear-gradient(0deg, rgb(90 100 60 / 19%), rgb(80 70 50 / 35%))',
+        glassBackground: 'linear-gradient(135deg, rgba(232, 229, 220, 0.8), rgba(220, 216, 205, 0.7))',
+        glassBackgroundHover: 'linear-gradient(135deg, rgba(240, 237, 228, 0.9), rgba(228, 224, 213, 0.8))',
+        glassBorder: '1px solid rgba(200, 195, 180, 0.9)',
+        colors: {
+            fantastic: {
+                rgba: 'rgba(140, 160, 90, 0.9)',
+                gradient: 'radial-gradient(ellipse at 30% 30%, rgba(160, 180, 110, 0.95), rgba(140, 160, 90, 0.85))',
+                level: 1,
+                labels: {
+                    en: 'Fantastic',
+                    fr: 'Fantastique',
+                    pt: 'Fantastico'
+                }
+            },
+            fine: {
+                rgba: 'rgba(120, 140, 80, 0.75)',
+                gradient: 'radial-gradient(ellipse at 30% 30%, rgba(140, 160, 100, 0.85), rgba(120, 140, 80, 0.7))',
+                level: 2,
+                labels: {
+                    en: 'Fine',
+                    fr: 'Bien',
+                    pt: 'Bem'
+                }
+            },
+            okay: {
+                rgba: 'rgba(150, 140, 100, 0.6)',
+                gradient: 'radial-gradient(ellipse at 30% 30%, rgba(170, 160, 120, 0.7), rgba(150, 140, 100, 0.55))',
+                level: 3,
+                labels: {
+                    en: 'Okay',
+                    fr: 'Okay',
+                    pt: 'Ok'
+                }
+            },
+            low: {
+                rgba: 'rgba(130, 120, 90, 0.45)',
+                gradient: 'radial-gradient(ellipse at 30% 30%, rgba(150, 140, 110, 0.55), rgba(130, 120, 90, 0.4))',
+                level: 4,
+                labels: {
+                    en: 'Low',
+                    fr: 'Bas',
+                    pt: 'Baixo'
+                }
+            },
+            down: {
+                rgba: 'rgba(110, 100, 80, 0.3)',
+                gradient: 'radial-gradient(ellipse at 30% 30%, rgba(130, 120, 100, 0.4), rgba(110, 100, 80, 0.25))',
+                level: 5,
+                labels: {
+                    en: 'Down',
+                    fr: 'Mal',
+                    pt: 'Mal'
+                }
+            }
+        }
     }
 };
 
