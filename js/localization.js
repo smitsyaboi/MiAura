@@ -3,6 +3,7 @@
  */
 
 import { getLanguagePreference, setLanguagePreference } from './storage.js';
+import { getMoodLabelFromTemplate, getMoodLevelFromTemplate } from './colorTemplates.js';
 
 /**
  * Supported languages in order of toggle rotation
@@ -91,6 +92,11 @@ const moodLevels = {
  * @returns {number} - Level 1-5, or 3 as default
  */
 export function getMoodLevel(color) {
+    // Use template-aware lookup first
+    const level = getMoodLevelFromTemplate(color);
+    if (level) return level;
+
+    // Fallback to legacy hardcoded lookup for backwards compatibility
     return moodLevels[color] || 3;
 }
 
@@ -159,6 +165,12 @@ export function t(key, language = null) {
  */
 export function getMoodLabel(color, language = null) {
     const lang = language || getCurrentLanguage();
+
+    // Use template-aware lookup first
+    const templateLabel = getMoodLabelFromTemplate(color, lang);
+    if (templateLabel) return templateLabel;
+
+    // Fallback to legacy hardcoded lookup for backwards compatibility
     return moodLabels[color]?.[lang] || '';
 }
 

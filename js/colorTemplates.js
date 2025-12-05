@@ -6,6 +6,7 @@
 export const colorTemplates = {
     default: {
         name: 'Default',
+        background: 'radial-gradient(ellipse at center, #f8f8f8, #e8e8e8)',
         colors: {
             fantastic: {
                 rgba: 'rgba(144, 238, 144, 0.9)',
@@ -61,6 +62,7 @@ export const colorTemplates = {
     },
     ocean: {
         name: 'Ocean',
+        background: 'radial-gradient(ellipse at center, #e6f3ff, #d0e8ff)',
         colors: {
             fantastic: {
                 rgba: 'rgba(100, 200, 255, 0.9)',
@@ -182,6 +184,9 @@ export function applyTemplate(templateKey) {
         root.style.setProperty(`--mood-${mood}`, data.rgba);
     });
 
+    // Update background color
+    root.style.setProperty('--color-background-body', template.background);
+
     // Update color options in the UI
     const colorOptions = document.querySelectorAll('.color-option');
     const colorKeys = ['fantastic', 'fine', 'okay', 'low', 'down'];
@@ -204,4 +209,54 @@ export function applyTemplate(templateKey) {
     setCurrentTemplate(templateKey);
 
     console.log(`Applied color template: ${template.name}`);
+}
+
+/**
+ * Get mood label for a color from the active template
+ * Searches across all templates to find the matching color
+ * @param {string} color - RGBA color string
+ * @param {string} language - Language code (en, fr, pt)
+ * @returns {string} Mood label or empty string if not found
+ */
+export function getMoodLabelFromTemplate(color, language) {
+    // Try current template first
+    const currentTemplateKey = getCurrentTemplate();
+    const currentTemplate = colorTemplates[currentTemplateKey];
+
+    for (const [moodKey, moodData] of Object.entries(currentTemplate.colors)) {
+        if (moodData.rgba === color) {
+            return moodData.labels[language] || '';
+        }
+    }
+
+    // If not found in current template, search all templates (for backwards compatibility)
+    for (const templateKey of Object.keys(colorTemplates)) {
+        const template = colorTemplates[templateKey];
+        for (const [moodKey, moodData] of Object.entries(template.colors)) {
+            if (moodData.rgba === color) {
+                return moodData.labels[language] || '';
+            }
+        }
+    }
+
+    return '';
+}
+
+/**
+ * Get mood level for a color from any template
+ * @param {string} color - RGBA color string
+ * @returns {number} Mood level (1-5) or 3 as default
+ */
+export function getMoodLevelFromTemplate(color) {
+    // Search all templates for the color
+    for (const templateKey of Object.keys(colorTemplates)) {
+        const template = colorTemplates[templateKey];
+        for (const [moodKey, moodData] of Object.entries(template.colors)) {
+            if (moodData.rgba === color) {
+                return moodData.level;
+            }
+        }
+    }
+
+    return 3; // Default to "okay" level
 }
