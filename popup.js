@@ -17,6 +17,7 @@ import { getSelectedColor, setSelectedColor, resetViewYear } from './js/state.js
 import { loadYearGrid } from './js/gridRenderer.js';
 import { setupAllEventListeners } from './js/eventHandlers.js';
 import { initNavigation } from './js/navigation.js';
+import { getCurrentTemplate, applyTemplate } from './js/colorTemplates.js';
 
 /**
  * Updates all UI text to the current language
@@ -145,6 +146,7 @@ function setupTestControls() {
     const input = document.getElementById('testStreakInput');
     const settingsTitle = document.getElementById('settingsTitle');
     const testSection = document.querySelector('.test-section');
+    const templateSelect = document.getElementById('colorTemplateSelect');
 
     // Secret activation: tap settings title 5 times
     let tapCount = 0;
@@ -184,6 +186,20 @@ function setupTestControls() {
     if (clearBtn) {
         clearBtn.addEventListener('click', () => {
             clearTestStreak();
+            loadYearGrid();
+        });
+    }
+
+    // Color template selector
+    if (templateSelect) {
+        // Set current template
+        const currentTemplate = getCurrentTemplate();
+        templateSelect.value = currentTemplate;
+
+        templateSelect.addEventListener('change', (e) => {
+            const selectedTemplate = e.target.value;
+            applyTemplate(selectedTemplate);
+            // Reload the grid to apply new colors to existing moods
             loadYearGrid();
         });
     }
@@ -228,6 +244,10 @@ function checkTodayLogged() {
  * Initializes the application
  */
 function init() {
+    // Apply the saved color template
+    const currentTemplate = getCurrentTemplate();
+    applyTemplate(currentTemplate);
+
     resetViewYear();
     checkTodayLogged();
     updateLanguage();
