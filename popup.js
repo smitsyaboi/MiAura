@@ -221,10 +221,9 @@ function setupTestControls() {
 
             // Check if template is locked
             if (template.premium && !isTemplateUnlocked(selectedTemplate)) {
-                // Show upgrade message
-                alert('🔒 Premium Template\n\nThis template requires premium access.\n\nFor testing: Use the "Unlock Premium" button below.');
-                // Revert to current template
+                // Silently revert to current template
                 templateSelect.value = getCurrentTemplate();
+                console.log('🔒 Premium template locked:', template.name);
                 return;
             }
 
@@ -243,7 +242,7 @@ function setupTestControls() {
         grantPremiumAccess();
         // Refresh the dropdown
         setupTestControls();
-        alert('✨ Premium unlocked! All templates are now available.');
+        console.log('✨ Premium unlocked');
     });
 
     const lockBtn = document.createElement('button');
@@ -259,7 +258,7 @@ function setupTestControls() {
         if (colorTemplates[current]?.premium) {
             applyTemplate('default');
         }
-        alert('🔒 Premium locked. Only free templates available.');
+        console.log('🔒 Premium locked');
     });
 
     if (testSection && templateSelect) {
