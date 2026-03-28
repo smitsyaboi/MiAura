@@ -87,19 +87,6 @@ button:hover {
     box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
-/* Language toggle button */
-.language-toggle {
-    position: absolute;
-    bottom: 18px;
-    right: 18px;
-}
-
-/* Back/Navigation button */
-.back-button {
-    position: absolute;
-    bottom: 18px;
-    left: 18px;
-}
 
 /* Year navigation */
 .year-nav-container {

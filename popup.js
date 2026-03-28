@@ -10,7 +10,6 @@ import {
     initLanguageCache,
     setCurrentLanguage,
     t,
-    getToggleLabel,
     getLabelKey,
     defaultMoodLabels
 } from './js/localization.js';
@@ -25,12 +24,9 @@ import { initNavigation } from './js/navigation.js';
  */
 async function updateLanguage(data) {
     const lang = data ? data.settings.language : (await loadData()).settings.language;
-    const navBtn = document.getElementById('navBtn');
-    const page1 = document.getElementById('page1');
 
     // Update main UI text
     document.getElementById('mainTitle').textContent = t('title', lang);
-    document.getElementById('langToggle').textContent = getToggleLabel(lang);
 
     // Update settings page text
     document.getElementById('settingsTitle').textContent = t('settings', lang);
@@ -51,13 +47,6 @@ async function updateLanguage(data) {
     document.querySelectorAll('[data-mode]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.mode === counterMode);
     });
-
-    // Update nav button icon based on which page is active
-    if (page1.classList.contains('active')) {
-        navBtn.textContent = String.fromCodePoint(0x1F4C5); // calendar emoji
-    } else {
-        navBtn.textContent = '\u2190'; // left arrow
-    }
 
     // Update mood label if there's a selected mood
     const selectedColor = getSelectedColor();

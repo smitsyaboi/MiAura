@@ -4,7 +4,7 @@
 
 import { saveMoodForDate, getSetting } from './storage.js';
 import { getTodayDateString } from './dateUtils.js';
-import { cycleLanguage, getLabelKey } from './localization.js';
+import { getLabelKey } from './localization.js';
 import { getSelectedColor, setSelectedColor, incrementViewYear, decrementViewYear, incrementViewMonth, decrementViewMonth, incrementViewWeek, decrementViewWeek } from './state.js';
 import { loadYearGrid } from './gridRenderer.js';
 
@@ -35,20 +35,6 @@ export function showPage(pageId) {
 
     if (pageId !== 'page1') {
         loadYearGrid();
-    }
-}
-
-/**
- * Sets up language toggle button handler
- * @param {Function} onLanguageChange - Callback when language changes
- */
-export function setupLanguageToggle(onLanguageChange) {
-    const langToggle = document.getElementById('langToggle');
-    if (langToggle) {
-        langToggle.addEventListener('click', async () => {
-            await cycleLanguage();
-            onLanguageChange();
-        });
     }
 }
 
@@ -92,18 +78,6 @@ export function setupYearNavigation() {
  * Sets up main navigation button (calendar/back)
  */
 export function setupMainNavigation() {
-    const navBtn = document.getElementById('navBtn');
-    if (navBtn) {
-        navBtn.addEventListener('click', () => {
-            const page1 = document.getElementById('page1');
-            if (page1.classList.contains('active')) {
-                showPage('page2');
-            } else {
-                showPage('page1');
-            }
-        });
-    }
-
     const backBtn = document.getElementById('backBtn');
     if (backBtn) {
         backBtn.addEventListener('click', () => {
@@ -177,7 +151,6 @@ export function setupMoodSelection() {
  * @param {Function} onLanguageChange - Callback when language changes
  */
 export function setupAllEventListeners(onLanguageChange) {
-    setupLanguageToggle(onLanguageChange);
     setupYearNavigation();
     setupMainNavigation();
     setupMoodSelection();
