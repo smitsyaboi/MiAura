@@ -18,6 +18,7 @@ export const MOOD_THEMES = {
         bg: 'radial-gradient(ellipse at 50% 35%, #b8f0cc 0%, #72d4a0 45%, #48b882 100%)',
         glow: 'rgba(144, 238, 187, 0.6)',
         nav: 'linear-gradient(to bottom, rgba(80,170,120,0.92), rgba(40,130,90,0.97))',
+        tint: 'rgba(100, 220, 140, 0.18)',
         particle: true,
         floatSpeed: '4s'
     },
@@ -27,6 +28,7 @@ export const MOOD_THEMES = {
         bg: 'radial-gradient(ellipse at 50% 35%, #a8eedd 0%, #5ecbb0 45%, #38b09a 100%)',
         glow: 'rgba(128, 221, 192, 0.55)',
         nav: 'linear-gradient(to bottom, rgba(60,155,135,0.92), rgba(25,115,100,0.97))',
+        tint: 'rgba(80, 200, 185, 0.16)',
         particle: true,
         floatSpeed: '4.5s'
     },
@@ -36,6 +38,7 @@ export const MOOD_THEMES = {
         bg: 'radial-gradient(ellipse at 50% 35%, #a0e0f0 0%, #58c8e0 45%, #30aed0 100%)',
         glow: 'rgba(112, 208, 232, 0.5)',
         nav: 'linear-gradient(to bottom, rgba(45,145,180,0.92), rgba(20,108,145,0.97))',
+        tint: 'rgba(80, 195, 215, 0.14)',
         particle: false,
         floatSpeed: '5s'
     },
@@ -45,6 +48,7 @@ export const MOOD_THEMES = {
         bg: 'radial-gradient(ellipse at 50% 35%, #b0c8f0 0%, #6898d8 45%, #4878c0 100%)',
         glow: 'rgba(136, 176, 224, 0.4)',
         nav: 'linear-gradient(to bottom, rgba(70,100,170,0.92), rgba(40,68,140,0.97))',
+        tint: 'rgba(100, 140, 210, 0.14)',
         particle: false,
         floatSpeed: '5.5s'
     },
@@ -54,6 +58,7 @@ export const MOOD_THEMES = {
         bg: 'radial-gradient(ellipse at 50% 35%, #c0c8d8 0%, #8090b0 45%, #6070a0 100%)',
         glow: 'rgba(160, 168, 192, 0.3)',
         nav: 'linear-gradient(to bottom, rgba(90,100,140,0.92), rgba(60,68,110,0.97))',
+        tint: 'rgba(130, 130, 190, 0.12)',
         particle: false,
         floatSpeed: '6s'
     }

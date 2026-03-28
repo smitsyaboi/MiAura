@@ -16,14 +16,10 @@ export function showPage(pageId) {
     });
     document.getElementById(pageId).classList.add('active');
 
-    // Reset nav to default when not on mood page
-    const vistaNav = document.querySelector('.vista-nav');
+    // Fade out mood tint when leaving page 1
     if (pageId !== 'page1') {
-        vistaNav.style.transition = 'background-image 0.4s ease';
-        vistaNav.style.backgroundImage = `
-            linear-gradient(to bottom, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.20) 48%, rgba(255,255,255,0.00) 49%, rgba(0,0,0,0.08) 100%),
-            linear-gradient(to bottom, rgba(140,195,190,0.92) 0%, rgba(90,155,150,0.97) 100%)
-        `;
+        const tint = document.getElementById('moodTint');
+        if (tint) tint.style.opacity = '0';
     }
 
     // Sync nav active state

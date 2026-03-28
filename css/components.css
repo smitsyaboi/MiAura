@@ -224,6 +224,16 @@ button:hover {
     overflow: hidden;
 }
 
+.mood-tint {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: background 1.2s ease, opacity 1.2s ease;
+    pointer-events: none;
+    z-index: 0;
+}
+
 #page1.active {
     display: flex;
 }

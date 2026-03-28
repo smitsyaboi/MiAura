@@ -27,16 +27,15 @@ let selectedLevel = null;
  */
 function applyMoodTheme(level, isHover = false) {
     const theme = MOOD_THEMES[level] || MOOD_THEMES[3];
-    const page1 = document.getElementById('page1');
     const heroOrb = document.getElementById('heroOrb');
     const heroGlow = document.getElementById('heroGlow');
-    const vistaNav = document.querySelector('.vista-nav');
     const colorLabel = document.getElementById('colorLabel');
     const particles = document.getElementById('particles');
+    const tint = document.getElementById('moodTint');
 
-    // Background
-    page1.style.transition = 'background 0.6s ease';
-    page1.style.background = theme.bg;
+    // Tint overlay
+    tint.style.background = `radial-gradient(ellipse at 50% 45%, ${theme.tint} 0%, transparent 70%)`;
+    tint.style.opacity = '1';
 
     // Hero orb
     heroOrb.style.background = theme.orb;
@@ -45,13 +44,6 @@ function applyMoodTheme(level, isHover = false) {
 
     // Glow
     heroGlow.style.background = theme.glow;
-
-    // Nav bar
-    vistaNav.style.transition = 'background-image 0.6s ease';
-    vistaNav.style.backgroundImage = `
-        linear-gradient(to bottom, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.20) 48%, rgba(255,255,255,0.00) 49%, rgba(0,0,0,0.08) 100%),
-        ${theme.nav}
-    `;
 
     // Selector orb active state
     document.querySelectorAll('.mood-orb').forEach(o => {
