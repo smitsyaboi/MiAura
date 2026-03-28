@@ -63,11 +63,12 @@ h1 {
 }
 
 #page2.active {
+    padding: 0 4px 8px 4px;
     height: 100%;
     overflow-y: hidden;
-    padding-bottom: 8px;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
     background: transparent;
     position: relative;
     z-index: 1;
