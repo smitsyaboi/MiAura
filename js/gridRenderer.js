@@ -4,7 +4,7 @@
 
 import { loadData, calculateStreakFromMoods, getStreakHeatLevel } from './storage.js';
 import { generateYearDates, getTodayDateString, formatDateForDisplay, formatDateString } from './dateUtils.js';
-import { t } from './localization.js';
+import { t, getCachedLanguage } from './localization.js';
 import { getViewYear, getActualYear, getViewMonth, getViewWeekStart } from './state.js';
 
 const LEVEL_TO_Y = {
@@ -120,8 +120,9 @@ function buildWaveSVG(points, width, height, labels) {
     // Today marker
     let todayMarker = '';
     if (todayPoint) {
+        const todayLabel = t('today', getCachedLanguage());
         todayMarker = `<line x1="${todayPoint.x}" y1="12" x2="${todayPoint.x}" y2="${BASELINE_Y}" stroke="rgba(26,58,74,0.2)" stroke-width="0.75" stroke-dasharray="3 2"/>`;
-        todayMarker += `<text x="${todayPoint.x}" y="10" text-anchor="middle" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.55)">today</text>`;
+        todayMarker += `<text x="${todayPoint.x}" y="10" text-anchor="middle" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.55)">${todayLabel}</text>`;
     }
 
     let labelsSVG = labels || '';
@@ -225,8 +226,9 @@ function renderYearGrid(moods, language) {
     let todayMarker = '';
     let todayDot = '';
     if (todayPt) {
+        const todayLabel = t('today', language);
         todayMarker = `<line x1="${todayPt.x}" y1="12" x2="${todayPt.x}" y2="${BASELINE_Y}" stroke="rgba(26,58,74,0.2)" stroke-width="0.75" stroke-dasharray="3 2"/>`;
-        todayMarker += `<text x="${todayPt.x}" y="10" text-anchor="middle" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.55)">today</text>`;
+        todayMarker += `<text x="${todayPt.x}" y="10" text-anchor="middle" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.55)">${todayLabel}</text>`;
         if (todayPt.isLogged) {
             const color = WAVE_COLORS[todayPt.level] || WAVE_COLORS[3];
             todayDot = `<circle cx="${todayPt.x}" cy="${todayPt.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
@@ -345,7 +347,7 @@ function renderWeekGrid(moods, language) {
     const points = [];
     const dayLabels = [];
 
-    const localeMap = { en: 'en-US', fr: 'fr-FR', pt: 'pt-BR' };
+    const localeMap = { en: 'en-US', fr: 'fr-FR', pt: 'pt-BR', de: 'de-DE', sv: 'sv-SE' };
     const locale = localeMap[language] || 'en-US';
 
     for (let i = 0; i < 7; i++) {
@@ -370,9 +372,9 @@ function renderWeekGrid(moods, language) {
 
     // Y-axis mood labels
     let axisLabels = '';
-    axisLabels += `<text x="4" y="30" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.3)">Fantastic</text>`;
-    axisLabels += `<text x="4" y="128" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.3)">Okay</text>`;
-    axisLabels += `<text x="4" y="210" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.3)">Down</text>`;
+    axisLabels += `<text x="4" y="30" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.3)">${t('fantastic', language)}</text>`;
+    axisLabels += `<text x="4" y="128" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.3)">${t('okay', language)}</text>`;
+    axisLabels += `<text x="4" y="210" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.3)">${t('down', language)}</text>`;
 
     // Day labels below
     let labels = axisLabels;
@@ -394,7 +396,7 @@ function renderWeekGrid(moods, language) {
  * Gets localized month names
  */
 function getMonthNames(language) {
-    const localeMap = { en: 'en-US', fr: 'fr-FR', pt: 'pt-BR' };
+    const localeMap = { en: 'en-US', fr: 'fr-FR', pt: 'pt-BR', de: 'de-DE', sv: 'sv-SE' };
     const locale = localeMap[language] || 'en-US';
     const months = [];
     for (let i = 0; i < 12; i++) {

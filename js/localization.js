@@ -13,7 +13,7 @@ let _cachedLanguage = 'en';
 /**
  * Supported languages in order of toggle rotation
  */
-export const SUPPORTED_LANGUAGES = ['en', 'fr', 'pt'];
+export const SUPPORTED_LANGUAGES = ['en', 'fr', 'pt', 'de', 'sv'];
 
 /**
  * UI translations for each language
@@ -33,7 +33,11 @@ export const translations = {
         total: 'Total',
         testMode: 'Test Mode',
         dataExport: 'Data Export',
-        comingSoon: 'Coming Soon ✨'
+        comingSoon: 'Coming Soon ✨',
+        today: 'today',
+        fantastic: 'Fantastic',
+        okay: 'Okay',
+        down: 'Down'
     },
     fr: {
         title: 'Bonjour, comment allez-vous aujourd\'hui?',
@@ -49,7 +53,11 @@ export const translations = {
         total: 'Total',
         testMode: 'Mode Test',
         dataExport: 'Exportation',
-        comingSoon: 'Bientot disponible ✨'
+        comingSoon: 'Bientot disponible ✨',
+        today: "aujourd'hui",
+        fantastic: 'Fantastique',
+        okay: 'Correct',
+        down: 'Abattu'
     },
     pt: {
         title: 'Ola, como voce esta se sentindo hoje?',
@@ -65,7 +73,51 @@ export const translations = {
         total: 'Total',
         testMode: 'Modo de Teste',
         dataExport: 'Exportar Dados',
-        comingSoon: 'Em breve ✨'
+        comingSoon: 'Em breve ✨',
+        today: 'hoje',
+        fantastic: 'Fantastico',
+        okay: 'Ok',
+        down: 'Deprimido'
+    },
+    de: {
+        title: 'Hallo, wie fühlst du dich heute?',
+        yearTitle: 'Jahr',
+        daysLogged: 'Tage erfasst',
+        dayStreak: 'Serie',
+        back: 'Zurück',
+        settings: 'Einstellungen',
+        language: 'Sprache',
+        view: 'Ansicht',
+        counter: 'Zähler',
+        streak: 'Serie',
+        total: 'Gesamt',
+        testMode: 'Testmodus',
+        dataExport: 'Daten exportieren',
+        comingSoon: 'Demnächst ✨',
+        today: 'heute',
+        fantastic: 'Fantastisch',
+        okay: 'Okay',
+        down: 'Niedergeschlagen'
+    },
+    sv: {
+        title: 'Hej, hur mår du idag?',
+        yearTitle: 'År',
+        daysLogged: 'dagar loggade',
+        dayStreak: 'svit',
+        back: 'Tillbaka',
+        settings: 'Inställningar',
+        language: 'Språk',
+        view: 'Vy',
+        counter: 'Räknare',
+        streak: 'Svit',
+        total: 'Totalt',
+        testMode: 'Testläge',
+        dataExport: 'Exportera data',
+        comingSoon: 'Kommer snart ✨',
+        today: 'idag',
+        fantastic: 'Fantastisk',
+        okay: 'Okej',
+        down: 'Nedstämd'
     }
 };
 
@@ -73,11 +125,11 @@ export const translations = {
  * Mood labels for each color in all languages
  */
 export const moodLabels = {
-    'rgba(144, 238, 144, 0.9)': { en: 'Fantastic', fr: 'Fantastique', pt: 'Fantastico' },
-    'rgba(120, 220, 180, 0.75)': { en: 'Fine', fr: 'Bien', pt: 'Bem' },
-    'rgba(100, 200, 210, 0.6)': { en: 'Okay', fr: 'Correct', pt: 'Ok' },
-    'rgba(140, 180, 220, 0.45)': { en: 'Low', fr: 'Bas', pt: 'Baixo' },
-    'rgba(160, 180, 200, 0.3)': { en: 'Down', fr: 'Abattu', pt: 'Deprimido' }
+    'rgba(144, 238, 144, 0.9)': { en: 'Fantastic', fr: 'Fantastique', pt: 'Fantastico', de: 'Fantastisch', sv: 'Fantastisk' },
+    'rgba(120, 220, 180, 0.75)': { en: 'Fine', fr: 'Bien', pt: 'Bem', de: 'Gut', sv: 'Bra' },
+    'rgba(100, 200, 210, 0.6)': { en: 'Okay', fr: 'Correct', pt: 'Ok', de: 'Okay', sv: 'Okej' },
+    'rgba(140, 180, 220, 0.45)': { en: 'Low', fr: 'Bas', pt: 'Baixo', de: 'Niedrig', sv: 'Lågt' },
+    'rgba(160, 180, 200, 0.3)': { en: 'Down', fr: 'Abattu', pt: 'Deprimido', de: 'Niedergeschlagen', sv: 'Nedstämd' }
 };
 
 /**
@@ -106,7 +158,9 @@ export function getMoodLevel(color) {
 export const defaultMoodLabels = {
     en: 'Okay',
     fr: 'Correct',
-    pt: 'Ok'
+    pt: 'Ok',
+    de: 'Okay',
+    sv: 'Okej'
 };
 
 /**

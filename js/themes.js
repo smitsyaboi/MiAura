@@ -13,7 +13,7 @@ export const LEVEL_TO_COLOR = {
 
 export const MOOD_THEMES = {
     1: {
-        label: { en: 'Fantastic', fr: 'Fantastique', pt: 'Fantastico' },
+        label: { en: 'Fantastic', fr: 'Fantastique', pt: 'Fantastico', de: 'Fantastisch', sv: 'Fantastisk' },
         orb: 'radial-gradient(ellipse at 40% 35%, #d8fce8 0%, #90eebb 35%, #48c87a 70%, #30a860 100%)',
         bg: 'radial-gradient(ellipse at 50% 35%, #b8f0cc 0%, #72d4a0 45%, #48b882 100%)',
         glow: 'rgba(144, 238, 187, 0.6)',
@@ -23,7 +23,7 @@ export const MOOD_THEMES = {
         floatSpeed: '4s'
     },
     2: {
-        label: { en: 'Fine', fr: 'Bien', pt: 'Bem' },
+        label: { en: 'Fine', fr: 'Bien', pt: 'Bem', de: 'Gut', sv: 'Bra' },
         orb: 'radial-gradient(ellipse at 40% 35%, #d0f8ee 0%, #80ddc0 35%, #38c0a8 70%, #20a090 100%)',
         bg: 'radial-gradient(ellipse at 50% 35%, #a8eedd 0%, #5ecbb0 45%, #38b09a 100%)',
         glow: 'rgba(128, 221, 192, 0.55)',
@@ -33,7 +33,7 @@ export const MOOD_THEMES = {
         floatSpeed: '4.5s'
     },
     3: {
-        label: { en: 'Okay', fr: 'Correct', pt: 'Ok' },
+        label: { en: 'Okay', fr: 'Correct', pt: 'Ok', de: 'Okay', sv: 'Okej' },
         orb: 'radial-gradient(ellipse at 40% 35%, #d0f4fc 0%, #78d8f0 35%, #30c0e0 70%, #1898c0 100%)',
         bg: 'radial-gradient(ellipse at 50% 35%, #a0e0f0 0%, #58c8e0 45%, #30aed0 100%)',
         glow: 'rgba(112, 208, 232, 0.5)',
@@ -43,7 +43,7 @@ export const MOOD_THEMES = {
         floatSpeed: '5s'
     },
     4: {
-        label: { en: 'Low', fr: 'Bas', pt: 'Baixo' },
+        label: { en: 'Low', fr: 'Bas', pt: 'Baixo', de: 'Niedrig', sv: 'Lågt' },
         orb: 'radial-gradient(ellipse at 40% 35%, #d8e8fc 0%, #90b8e8 35%, #5080d0 70%, #3060b8 100%)',
         bg: 'radial-gradient(ellipse at 50% 35%, #b0c8f0 0%, #6898d8 45%, #4878c0 100%)',
         glow: 'rgba(136, 176, 224, 0.4)',
@@ -53,7 +53,7 @@ export const MOOD_THEMES = {
         floatSpeed: '5.5s'
     },
     5: {
-        label: { en: 'Down', fr: 'Abattu', pt: 'Deprimido' },
+        label: { en: 'Down', fr: 'Abattu', pt: 'Deprimido', de: 'Niedergeschlagen', sv: 'Nedstämd' },
         orb: 'radial-gradient(ellipse at 40% 35%, #e0e4f0 0%, #b0b8d0 35%, #7080b0 70%, #5060a0 100%)',
         bg: 'radial-gradient(ellipse at 50% 35%, #c0c8d8 0%, #8090b0 45%, #6070a0 100%)',
         glow: 'rgba(160, 168, 192, 0.3)',
