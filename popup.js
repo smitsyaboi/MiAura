@@ -16,6 +16,7 @@ import { resetViewYear } from './js/state.js';
 import { loadYearGrid } from './js/gridRenderer.js';
 import { setupAllEventListeners, setupMoodSelection, showPage } from './js/eventHandlers.js';
 import { initNavigation } from './js/navigation.js';
+import { maybeShowReviewPrompt } from './js/reviewPrompt.js';
 
 /** Currently selected mood level (null if none) */
 let selectedLevel = null;
@@ -279,6 +280,7 @@ async function init() {
     setupTestControls();
     await loadYearGrid(data);
     initNavigation();
+    await maybeShowReviewPrompt();
 }
 
 // Start the application when DOM is ready

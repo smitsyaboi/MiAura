@@ -37,7 +37,9 @@ export const translations = {
         today: 'today',
         fantastic: 'Fantastic',
         okay: 'Okay',
-        down: 'Down'
+        down: 'Down',
+        reviewPrompt: 'Loving MiAura? You\'re on a 7-day streak ✦',
+        reviewAction: 'Leave a review'
     },
     fr: {
         title: 'Bonjour, comment allez-vous aujourd\'hui?',
@@ -57,7 +59,9 @@ export const translations = {
         today: "aujourd'hui",
         fantastic: 'Fantastique',
         okay: 'Correct',
-        down: 'Abattu'
+        down: 'Abattu',
+        reviewPrompt: 'Vous aimez MiAura? 7 jours de suite ✦',
+        reviewAction: 'Laisser un avis'
     },
     pt: {
         title: 'Ola, como voce esta se sentindo hoje?',
@@ -77,7 +81,9 @@ export const translations = {
         today: 'hoje',
         fantastic: 'Fantastico',
         okay: 'Ok',
-        down: 'Deprimido'
+        down: 'Deprimido',
+        reviewPrompt: 'Gostando do MiAura? 7 dias seguidos ✦',
+        reviewAction: 'Avaliar'
     },
     de: {
         title: 'Hallo, wie fühlst du dich heute?',
@@ -97,7 +103,9 @@ export const translations = {
         today: 'heute',
         fantastic: 'Fantastisch',
         okay: 'Okay',
-        down: 'Niedergeschlagen'
+        down: 'Niedergeschlagen',
+        reviewPrompt: 'MiAura gefällt dir? 7 Tage in Folge ✦',
+        reviewAction: 'Bewertung schreiben'
     },
     sv: {
         title: 'Hej, hur mår du idag?',
@@ -117,7 +125,9 @@ export const translations = {
         today: 'idag',
         fantastic: 'Fantastisk',
         okay: 'Okej',
-        down: 'Nedstämd'
+        down: 'Nedstämd',
+        reviewPrompt: 'Gillar du MiAura? 7 dagar i rad ✦',
+        reviewAction: 'Skriv en recension'
     }
 };
 
