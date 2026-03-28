@@ -13,17 +13,27 @@ import { loadYearGrid } from './gridRenderer.js';
  * @param {string} pageId - ID of page to show
  */
 export function showPage(pageId) {
-    const navBtn = document.getElementById('navBtn');
-
     document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
     });
     document.getElementById(pageId).classList.add('active');
 
-    if (pageId === 'page1') {
-        navBtn.textContent = String.fromCodePoint(0x1F4C5); // calendar emoji
-    } else {
-        navBtn.textContent = '\u2190'; // left arrow
+    // Sync nav active state
+    const pageNavMap = {
+        'page1': 'navToday',
+        'page2': 'navCalendar',
+        'page3': 'navSettings'
+    };
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    const navId = pageNavMap[pageId];
+    if (navId) {
+        const navItem = document.getElementById(navId);
+        if (navItem) navItem.classList.add('active');
+    }
+
+    if (pageId !== 'page1') {
         loadYearGrid();
     }
 }
