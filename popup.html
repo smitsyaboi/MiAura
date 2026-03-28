@@ -81,11 +81,16 @@
                 <div class="year-nav-row">
                     <div class="year-nav-container">
                         <button class="year-arrow" id="prevYear">‹</button>
-                        <span id="yearDisplay">2025</span>
+                        <span id="yearDisplay">2026</span>
                         <button class="year-arrow" id="nextYear">›</button>
                     </div>
-                    <span id="loggedDays">0 days</span>
+                    <div class="view-toggle-inline">
+                        <button class="view-btn-inline" data-view="week" id="viewWeek">W</button>
+                        <button class="view-btn-inline" data-view="month" id="viewMonth">M</button>
+                        <button class="view-btn-inline" data-view="year" id="viewYear">Y</button>
+                    </div>
                 </div>
+                <span id="loggedDays">0 days</span>
             </div>
             <div class="year-grid" id="yearGrid"></div>
         </div>
@@ -95,14 +100,6 @@
             <h1 id="settingsTitle">Settings</h1>
 
             <div class="settings-section settings-compact">
-                <div class="settings-row">
-                    <span class="settings-label" id="calendarViewLabel">View</span>
-                    <div class="view-toggle">
-                        <button class="view-btn" data-view="year" id="viewYear">Y</button>
-                        <button class="view-btn" data-view="month" id="viewMonth">M</button>
-                        <button class="view-btn" data-view="week" id="viewWeek">W</button>
-                    </div>
-                </div>
                 <div class="settings-row">
                     <span class="settings-label" id="counterModeLabel">Counter</span>
                     <div class="view-toggle">

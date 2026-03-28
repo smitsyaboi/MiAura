@@ -32,7 +32,6 @@ async function updateLanguage(data) {
     document.getElementById('settingsTitle').textContent = t('settings', lang);
     document.getElementById('languageLabel').textContent = t('language', lang);
     document.getElementById('counterModeLabel').textContent = t('counter', lang);
-    document.getElementById('calendarViewLabel').textContent = t('view', lang);
     document.getElementById('streakTitle').textContent = t('streak', lang);
     document.getElementById('totalTitle').textContent = t('total', lang);
     document.getElementById('testModeLabel').textContent = t('testMode', lang);
@@ -116,7 +115,6 @@ async function setupViewToggle() {
         });
     });
 
-    // Set initial active state
     const data = await loadData();
     const currentView = data.settings.calendarView;
     document.querySelectorAll('[data-view]').forEach(btn => {

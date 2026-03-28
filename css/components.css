@@ -424,6 +424,46 @@ button:hover {
         inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
+.view-toggle-inline {
+    display: flex;
+    gap: 2px;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    padding: 3px;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.view-btn-inline {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: rgba(26, 58, 74, 0.5);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: none;
+    font-family: var(--font-family);
+}
+
+.view-btn-inline:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: rgba(26, 58, 74, 0.8);
+    transform: none;
+}
+
+.view-btn-inline.active {
+    background: rgba(255, 255, 255, 0.6);
+    color: #1a3a4a;
+    box-shadow:
+        0 1px 4px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
 .settings-section h2 {
     font-size: 14px;
     font-weight: 600;
