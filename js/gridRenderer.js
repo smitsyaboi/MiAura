@@ -26,7 +26,8 @@ const WAVE_COLORS = {
 };
 
 function smoothPath(points) {
-    if (points.length < 2) return '';
+    if (points.length === 0) return '';
+    if (points.length === 1) return `M${points[0].x} ${points[0].y}`;
     let d = `M${points[0].x} ${points[0].y}`;
     for (let i = 1; i < points.length; i++) {
         const prev = points[i - 1];
@@ -37,15 +38,46 @@ function smoothPath(points) {
     return d;
 }
 
+function filledPath(points, baselineY) {
+    if (points.length === 0) return '';
+    const linePath = smoothPath(points);
+    if (points.length === 1) {
+        return `${linePath} L${points[0].x} ${baselineY} Z`;
+    }
+    return `${linePath} L${points[points.length - 1].x} ${baselineY} L${points[0].x} ${baselineY} Z`;
+}
+
+function buildSegments(points) {
+    const segments = [];
+    let currentSegment = [];
+
+    points.forEach(point => {
+        if (point.isLogged) {
+            currentSegment.push(point);
+        } else {
+            if (currentSegment.length > 0) {
+                segments.push(currentSegment);
+                currentSegment = [];
+            }
+        }
+    });
+
+    if (currentSegment.length > 0) {
+        segments.push(currentSegment);
+    }
+
+    return segments;
+}
+
 function buildWaveSVG(points, width, height, labels) {
     const gradId = 'waveGrad' + Math.random().toString(36).slice(2, 8);
     const fillGradId = 'fillGrad' + Math.random().toString(36).slice(2, 8);
 
-    // Separate logged and unlogged segments
-    const loggedPoints = points.filter(p => p.isLogged);
     const todayPoint = points.find(p => p.isToday);
+    const segments = buildSegments(points);
 
-    // Build line gradient stops from logged points
+    // Build line gradient stops from all logged points
+    const loggedPoints = points.filter(p => p.isLogged);
     let lineGradStops = '';
     if (loggedPoints.length > 0) {
         const minX = points[0].x;
@@ -62,60 +94,27 @@ function buildWaveSVG(points, width, height, labels) {
     gridLines += `<line x1="0" y1="160" x2="${width}" y2="160" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
     gridLines += `<line x1="0" y1="80" x2="${width}" y2="80" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
 
-    // Wave path for logged points
-    let wavePath = '';
-    let fillPath = '';
-    let dashedPath = '';
+    // Render each segment separately
+    let segmentPaths = '';
+    segments.forEach(segment => {
+        if (segment.length === 0) return;
 
-    if (loggedPoints.length >= 2) {
-        const pathD = smoothPath(loggedPoints);
-        wavePath = `<path d="${pathD}" fill="none" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round"/>`;
+        // Fill area
+        segmentPaths += `<path d="${filledPath(segment, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.5"/>`;
 
-        // Fill area under logged wave
-        const fillD = pathD + ` L${loggedPoints[loggedPoints.length - 1].x} ${BASELINE_Y} L${loggedPoints[0].x} ${BASELINE_Y} Z`;
-        fillPath = `<path d="${fillD}" fill="url(#${fillGradId})" opacity="0.6"/>`;
-    } else if (loggedPoints.length === 1) {
-        wavePath = '';
-    }
-
-    // Find continuous unlogged segments
-    let unloggedSegments = [];
-    let currentSeg = [];
-    for (let i = 0; i < points.length; i++) {
-        if (!points[i].isLogged) {
-            if (currentSeg.length === 0 && i > 0 && points[i - 1].isLogged) {
-                currentSeg.push({ x: points[i - 1].x, y: LEVEL_TO_Y[points[i - 1].level] || UNLOGGED_Y });
-            }
-            currentSeg.push({ x: points[i].x, y: UNLOGGED_Y });
-        } else {
-            if (currentSeg.length > 0) {
-                currentSeg.push({ x: points[i].x, y: LEVEL_TO_Y[points[i].level] || UNLOGGED_Y });
-                unloggedSegments.push(currentSeg);
-                currentSeg = [];
-            }
+        // Wave line (only if 2+ points)
+        if (segment.length >= 2) {
+            segmentPaths += `<path d="${smoothPath(segment)}" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
         }
-    }
-    if (currentSeg.length > 0) unloggedSegments.push(currentSeg);
 
-    unloggedSegments.forEach(seg => {
-        if (seg.length >= 2) {
-            const d = smoothPath(seg);
-            dashedPath += `<path d="${d}" fill="none" stroke="rgba(26,58,74,0.15)" stroke-width="1" stroke-dasharray="4 3" stroke-linecap="round"/>`;
-        }
-    });
-
-    // Dots
-    let dots = '';
-    points.forEach(p => {
-        if (p.isLogged) {
-            const color = WAVE_COLORS[p.level] || WAVE_COLORS[3];
-            if (p.isToday) {
-                dots += `<circle cx="${p.x}" cy="${p.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
+        // Dots on each point
+        segment.forEach(point => {
+            const color = WAVE_COLORS[point.level] || WAVE_COLORS[3];
+            if (point.isToday) {
+                segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
             }
-            dots += `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="${color}" stroke="white" stroke-width="1.5"/>`;
-        } else if (p.isToday) {
-            dots += `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="none" stroke="rgba(26,58,74,0.25)" stroke-width="1.5" stroke-dasharray="2 2"/>`;
-        }
+            segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="3.5" fill="${color}" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>`;
+        });
     });
 
     // Today marker
@@ -125,11 +124,7 @@ function buildWaveSVG(points, width, height, labels) {
         todayMarker += `<text x="${todayPoint.x}" y="10" text-anchor="middle" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.55)">today</text>`;
     }
 
-    // Labels
-    let labelsSVG = '';
-    if (labels) {
-        labelsSVG = labels;
-    }
+    let labelsSVG = labels || '';
 
     return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;max-width:100%;overflow:hidden;">
         <defs>
@@ -142,11 +137,8 @@ function buildWaveSVG(points, width, height, labels) {
             </linearGradient>
         </defs>
         ${gridLines}
-        ${fillPath}
-        ${wavePath}
-        ${dashedPath}
+        ${segmentPaths}
         ${todayMarker}
-        ${dots}
         ${labelsSVG}
     </svg>`;
 }
@@ -198,7 +190,8 @@ function renderYearGrid(moods, language) {
         labels += `<text x="${labelX}" y="253" text-anchor="middle" font-size="8" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.45)">${monthLabels[m]}</text>`;
     }
 
-    // Build SVG - for year view we use only logged points for the wave, but show today
+    // Build segmented SVG for year view
+    const segments = buildSegments(points);
     const loggedPts = points.filter(p => p.isLogged);
     const todayPt = points.find(p => p.isToday);
 
@@ -218,15 +211,17 @@ function renderYearGrid(moods, language) {
     gridLines += `<line x1="0" y1="160" x2="296" y2="160" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
     gridLines += `<line x1="0" y1="80" x2="296" y2="80" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
 
-    let wavePath = '';
-    let fillPath = '';
-    if (loggedPts.length >= 2) {
-        const pathD = smoothPath(loggedPts);
-        wavePath = `<path d="${pathD}" fill="none" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round"/>`;
-        const fillD = pathD + ` L${loggedPts[loggedPts.length - 1].x} ${BASELINE_Y} L${loggedPts[0].x} ${BASELINE_Y} Z`;
-        fillPath = `<path d="${fillD}" fill="url(#${fillGradId})" opacity="0.6"/>`;
-    }
+    // Render each segment
+    let segmentPaths = '';
+    segments.forEach(segment => {
+        if (segment.length === 0) return;
+        segmentPaths += `<path d="${filledPath(segment, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.5"/>`;
+        if (segment.length >= 2) {
+            segmentPaths += `<path d="${smoothPath(segment)}" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+        }
+    });
 
+    // Today marker and dot (year view shows today dot)
     let todayMarker = '';
     let todayDot = '';
     if (todayPt) {
@@ -236,8 +231,6 @@ function renderYearGrid(moods, language) {
             const color = WAVE_COLORS[todayPt.level] || WAVE_COLORS[3];
             todayDot = `<circle cx="${todayPt.x}" cy="${todayPt.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
             todayDot += `<circle cx="${todayPt.x}" cy="${todayPt.y}" r="3.5" fill="${color}" stroke="white" stroke-width="1.5"/>`;
-        } else {
-            todayDot = `<circle cx="${todayPt.x}" cy="${UNLOGGED_Y}" r="3.5" fill="none" stroke="rgba(26,58,74,0.25)" stroke-width="1.5" stroke-dasharray="2 2"/>`;
         }
     }
 
@@ -252,9 +245,7 @@ function renderYearGrid(moods, language) {
                     <rect x="${todayPt.x + 5}" y="0" width="${296 - todayPt.x}" height="260" fill="black" opacity="0.7"/>
                 </mask>
             </defs>`;
-        const maskedContent = `<g mask="url(#${fadeMaskId})">${fillPath}${wavePath}</g>`;
-        fillPath = '';
-        wavePath = maskedContent;
+        segmentPaths = `<g mask="url(#${fadeMaskId})">${segmentPaths}</g>`;
     }
 
     const svg = `<svg viewBox="0 0 296 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;max-width:100%;overflow:hidden;">
@@ -269,8 +260,7 @@ function renderYearGrid(moods, language) {
         </defs>
         ${fadeStyle}
         ${gridLines}
-        ${fillPath}
-        ${wavePath}
+        ${segmentPaths}
         ${todayMarker}
         ${todayDot}
         ${labels}
