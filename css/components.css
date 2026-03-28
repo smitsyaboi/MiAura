@@ -159,6 +159,7 @@ button:hover {
     gap: 6px;
     width: 100%;
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .year-nav-row {
@@ -167,6 +168,8 @@ button:hover {
     justify-content: space-between;
     gap: 6px;
     width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 #loggedDays {
@@ -176,6 +179,9 @@ button:hover {
     opacity: 0.6;
     white-space: nowrap;
     flex-shrink: 0;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .days-main {
