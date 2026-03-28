@@ -332,7 +332,7 @@ button:hover {
     text-align: center;
     font-size: 30px;
     color: var(--color-text-primary);
-    font-weight: 450;
+    font-weight: 600;
     margin-top: 35px;
     min-height: 22px;
     opacity: 0;
