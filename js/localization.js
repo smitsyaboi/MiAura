@@ -2,7 +2,13 @@
  * Localization module - handles translations and language management
  */
 
-import { getLanguagePreference, setLanguagePreference } from './storage.js';
+import { getSetting, setSetting } from './storage.js';
+
+/**
+ * Cached language — kept in sync by getCurrentLanguage / setCurrentLanguage.
+ * Sync helpers (t, getLabelKey, …) read from the cache so they stay synchronous.
+ */
+let _cachedLanguage = 'en';
 
 /**
  * Supported languages in order of toggle rotation
@@ -113,30 +119,41 @@ const languageToggleLabels = {
 };
 
 /**
- * Gets the current language
- * @returns {string} - Current language code
+ * Initialises the language cache from already-loaded data.
+ * Call once during app init to avoid an extra storage read.
+ * @param {string} language
  */
-export function getCurrentLanguage() {
-    return getLanguagePreference();
+export function initLanguageCache(language) {
+    _cachedLanguage = language || 'en';
 }
 
 /**
- * Sets the current language
- * @param {string} language - Language code to set
+ * Gets the current language (async — reads from storage, updates cache)
+ * @returns {Promise<string>}
  */
-export function setCurrentLanguage(language) {
-    setLanguagePreference(language);
+export async function getCurrentLanguage() {
+    _cachedLanguage = (await getSetting('language')) || 'en';
+    return _cachedLanguage;
+}
+
+/**
+ * Sets the current language (async — writes to storage, updates cache)
+ * @param {string} language
+ */
+export async function setCurrentLanguage(language) {
+    _cachedLanguage = language;
+    await setSetting('language', language);
 }
 
 /**
  * Cycles to the next language in the supported list
- * @returns {string} - The new language code
+ * @returns {Promise<string>} - The new language code
  */
-export function cycleLanguage() {
-    const current = getCurrentLanguage();
+export async function cycleLanguage() {
+    const current = _cachedLanguage;
     const currentIndex = SUPPORTED_LANGUAGES.indexOf(current);
     const newLanguage = SUPPORTED_LANGUAGES[(currentIndex + 1) % SUPPORTED_LANGUAGES.length];
-    setCurrentLanguage(newLanguage);
+    await setCurrentLanguage(newLanguage);
     return newLanguage;
 }
 
@@ -147,7 +164,7 @@ export function cycleLanguage() {
  * @returns {string} - Translated string
  */
 export function t(key, language = null) {
-    const lang = language || getCurrentLanguage();
+    const lang = language || _cachedLanguage;
     return translations[lang]?.[key] || translations.en[key] || key;
 }
 
@@ -158,7 +175,7 @@ export function t(key, language = null) {
  * @returns {string} - Mood label
  */
 export function getMoodLabel(color, language = null) {
-    const lang = language || getCurrentLanguage();
+    const lang = language || _cachedLanguage;
     return moodLabels[color]?.[lang] || '';
 }
 
@@ -168,7 +185,7 @@ export function getMoodLabel(color, language = null) {
  * @returns {string} - Label key like 'labelEn', 'labelFr', etc.
  */
 export function getLabelKey(language = null) {
-    const lang = language || getCurrentLanguage();
+    const lang = language || _cachedLanguage;
     return `label${lang.charAt(0).toUpperCase() + lang.slice(1)}`;
 }
 
@@ -178,6 +195,6 @@ export function getLabelKey(language = null) {
  * @returns {string} - Toggle button label
  */
 export function getToggleLabel(language = null) {
-    const lang = language || getCurrentLanguage();
+    const lang = language || _cachedLanguage;
     return languageToggleLabels[lang];
 }

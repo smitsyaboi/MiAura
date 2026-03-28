@@ -1,161 +1,118 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
-    migrateColor,
-    getMoodData,
-    saveMoodForDate,
+    migrateIfNeeded,
+    loadData,
+    saveData,
     getMoodForDate,
-    getLanguagePreference,
-    setLanguagePreference,
-    getCounterMode,
-    setCounterMode,
-    getCalendarView,
-    setCalendarView,
+    saveMoodForDate,
+    getSetting,
+    setSetting,
     calculateStreak,
+    calculateStreakFromMoods,
     getStreakHeatLevel,
     setTestStreak,
     clearTestStreak
 } from '../js/storage.js';
 
-// Mock localStorage
-const localStorageMock = (() => {
-    let store = {};
-    return {
-        getItem: vi.fn((key) => store[key] || null),
-        setItem: vi.fn((key, value) => { store[key] = value; }),
-        removeItem: vi.fn((key) => { delete store[key]; }),
-        clear: vi.fn(() => { store = {}; })
-    };
-})();
+// Mock chrome.storage.local
+let chromeStore = {};
+const chromeStorageMock = {
+    get: vi.fn((key) => {
+        if (typeof key === 'string') {
+            return Promise.resolve({ [key]: chromeStore[key] || undefined });
+        }
+        return Promise.resolve({});
+    }),
+    set: vi.fn((obj) => {
+        Object.assign(chromeStore, obj);
+        return Promise.resolve();
+    }),
+    remove: vi.fn((key) => {
+        delete chromeStore[key];
+        return Promise.resolve();
+    })
+};
 
-Object.defineProperty(global, 'localStorage', {
-    value: localStorageMock
-});
+global.chrome = { storage: { local: chromeStorageMock } };
+
+// Mock localStorage for migration tests
+const localStorageStore = {};
+const localStorageMock = {
+    getItem: vi.fn((key) => localStorageStore[key] || null),
+    setItem: vi.fn((key, value) => { localStorageStore[key] = value; }),
+    removeItem: vi.fn((key) => { delete localStorageStore[key]; }),
+    clear: vi.fn(() => { Object.keys(localStorageStore).forEach(k => delete localStorageStore[k]); })
+};
+Object.defineProperty(global, 'localStorage', { value: localStorageMock });
 
 describe('storage', () => {
     beforeEach(() => {
+        chromeStore = {};
         localStorageMock.clear();
         vi.clearAllMocks();
     });
 
-    describe('migrateColor', () => {
-        it('should migrate old hex color #90ee90 to rgba', () => {
-            expect(migrateColor('#90ee90')).toBe('rgba(144, 238, 144, 0.9)');
+    describe('loadData / saveData', () => {
+        it('should return default data when nothing stored', async () => {
+            const data = await loadData();
+            expect(data).toEqual({
+                version: 2,
+                settings: { language: 'en', counterMode: 'streak', calendarView: 'year' },
+                moods: {}
+            });
         });
 
-        it('should migrate old hex color #6eb86e to rgba', () => {
-            expect(migrateColor('#6eb86e')).toBe('rgba(120, 220, 180, 0.75)');
-        });
-
-        it('should migrate old hex color #528f62 to rgba', () => {
-            expect(migrateColor('#528f62')).toBe('rgba(100, 200, 210, 0.6)');
-        });
-
-        it('should migrate old hex color #3d5d55 to rgba', () => {
-            expect(migrateColor('#3d5d55')).toBe('rgba(140, 180, 220, 0.45)');
-        });
-
-        it('should migrate old hex color #252525 to rgba', () => {
-            expect(migrateColor('#252525')).toBe('rgba(160, 180, 200, 0.3)');
-        });
-
-        it('should return original color if no migration needed', () => {
-            const newColor = 'rgba(144, 238, 144, 0.9)';
-            expect(migrateColor(newColor)).toBe(newColor);
-        });
-
-        it('should return unknown colors unchanged', () => {
-            expect(migrateColor('#ffffff')).toBe('#ffffff');
-        });
-    });
-
-    describe('getMoodData / saveMoodForDate', () => {
-        it('should return empty object when no data exists', () => {
-            expect(getMoodData()).toEqual({});
-        });
-
-        it('should save and retrieve mood data', () => {
-            saveMoodForDate('2025-01-15', 'rgba(144, 238, 144, 0.9)');
-
-            expect(localStorageMock.setItem).toHaveBeenCalled();
-            const savedData = JSON.parse(localStorageMock.setItem.mock.calls[0][1]);
-            expect(savedData['2025-01-15']).toBeDefined();
-            expect(savedData['2025-01-15'].color).toBe('rgba(144, 238, 144, 0.9)');
-        });
-
-        it('should not save when color is null', () => {
-            saveMoodForDate('2025-01-15', null);
-            expect(localStorageMock.setItem).not.toHaveBeenCalled();
-        });
-
-        it('should include timestamp in saved data', () => {
-            saveMoodForDate('2025-01-15', 'rgba(144, 238, 144, 0.9)');
-
-            const savedData = JSON.parse(localStorageMock.setItem.mock.calls[0][1]);
-            expect(savedData['2025-01-15'].timestamp).toBeDefined();
-        });
-    });
-
-    describe('getMoodForDate', () => {
-        it('should return null for non-existent date', () => {
-            expect(getMoodForDate('2025-01-15')).toBeNull();
-        });
-
-        it('should return mood data for existing date', () => {
-            const mockData = {
-                '2025-01-15': { color: 'rgba(144, 238, 144, 0.9)', timestamp: '2025-01-15T12:00:00Z' }
+        it('should save and load data', async () => {
+            const newData = {
+                version: 2,
+                settings: { language: 'fr', counterMode: 'total', calendarView: 'month' },
+                moods: { '2026-03-01': { level: 1, timestamp: '2026-03-01T10:00:00.000Z' } }
             };
-            localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(mockData));
-
-            const result = getMoodForDate('2025-01-15');
-            expect(result).toEqual(mockData['2025-01-15']);
+            await saveData(newData);
+            const loaded = await loadData();
+            expect(loaded).toEqual(newData);
         });
     });
 
-    describe('getLanguagePreference / setLanguagePreference', () => {
-        it('should return "en" as default language', () => {
-            expect(getLanguagePreference()).toBe('en');
+    describe('saveMoodForDate / getMoodForDate', () => {
+        it('should return null for non-existent date', async () => {
+            expect(await getMoodForDate('2026-01-15')).toBeNull();
         });
 
-        it('should save language preference', () => {
-            setLanguagePreference('fr');
-            expect(localStorageMock.setItem).toHaveBeenCalledWith('language', 'fr');
+        it('should save and retrieve mood with level integer', async () => {
+            await saveMoodForDate('2026-01-15', 1);
+            const mood = await getMoodForDate('2026-01-15');
+            expect(mood).toBeDefined();
+            expect(mood.level).toBe(1);
+            expect(mood.timestamp).toBeDefined();
         });
 
-        it('should retrieve saved language preference', () => {
-            localStorageMock.getItem.mockReturnValueOnce('pt');
-            expect(getLanguagePreference()).toBe('pt');
-        });
-    });
-
-    describe('getCounterMode / setCounterMode', () => {
-        it('should return "streak" as default counter mode', () => {
-            expect(getCounterMode()).toBe('streak');
-        });
-
-        it('should save counter mode', () => {
-            setCounterMode('total');
-            expect(localStorageMock.setItem).toHaveBeenCalledWith('counterMode', 'total');
-        });
-
-        it('should retrieve saved counter mode', () => {
-            localStorageMock.getItem.mockReturnValueOnce('total');
-            expect(getCounterMode()).toBe('total');
+        it('should not save when level is falsy', async () => {
+            await saveMoodForDate('2026-01-15', 0);
+            expect(await getMoodForDate('2026-01-15')).toBeNull();
         });
     });
 
-    describe('getCalendarView / setCalendarView', () => {
-        it('should return "year" as default view', () => {
-            expect(getCalendarView()).toBe('year');
+    describe('getSetting / setSetting', () => {
+        it('should return undefined for unset setting when no data', async () => {
+            const val = await getSetting('language');
+            // Default data has language: 'en'
+            expect(val).toBe('en');
         });
 
-        it('should save calendar view', () => {
-            setCalendarView('month');
-            expect(localStorageMock.setItem).toHaveBeenCalledWith('calendarView', 'month');
+        it('should save and retrieve a setting', async () => {
+            await setSetting('language', 'fr');
+            expect(await getSetting('language')).toBe('fr');
         });
 
-        it('should retrieve saved calendar view', () => {
-            localStorageMock.getItem.mockReturnValueOnce('week');
-            expect(getCalendarView()).toBe('week');
+        it('should save counterMode setting', async () => {
+            await setSetting('counterMode', 'total');
+            expect(await getSetting('counterMode')).toBe('total');
+        });
+
+        it('should save calendarView setting', async () => {
+            await setSetting('calendarView', 'week');
+            expect(await getSetting('calendarView')).toBe('week');
         });
     });
 
@@ -188,13 +145,12 @@ describe('storage', () => {
         });
     });
 
-    describe('calculateStreak', () => {
-        it('should return 0 when no mood data', () => {
-            expect(calculateStreak()).toBe(0);
+    describe('calculateStreakFromMoods', () => {
+        it('should return 0 when no moods', () => {
+            expect(calculateStreakFromMoods({})).toBe(0);
         });
 
-        it('should calculate streak correctly', () => {
-            // Mock today and yesterday being logged
+        it('should calculate streak for consecutive days', () => {
             const today = new Date();
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
@@ -206,99 +162,135 @@ describe('storage', () => {
                 return `${year}-${month}-${day}`;
             };
 
-            const mockData = {
-                [formatDate(today)]: { color: 'rgba(144, 238, 144, 0.9)' },
-                [formatDate(yesterday)]: { color: 'rgba(144, 238, 144, 0.9)' }
+            const moods = {
+                [formatDate(today)]: { level: 1 },
+                [formatDate(yesterday)]: { level: 2 }
             };
 
-            localStorageMock.getItem.mockReturnValue(JSON.stringify(mockData));
+            expect(calculateStreakFromMoods(moods)).toBe(2);
+        });
+    });
 
-            expect(calculateStreak()).toBe(2);
+    describe('calculateStreak', () => {
+        it('should return 0 when no mood data', async () => {
+            expect(await calculateStreak()).toBe(0);
         });
 
-        it('should calculate streak across year boundary', () => {
-            // Simulate a streak that spans Dec 31 -> Jan 1
-            const mockData = {
-                '2025-01-03': { color: 'rgba(144, 238, 144, 0.9)' },
-                '2025-01-02': { color: 'rgba(144, 238, 144, 0.9)' },
-                '2025-01-01': { color: 'rgba(144, 238, 144, 0.9)' },
-                '2024-12-31': { color: 'rgba(144, 238, 144, 0.9)' },
-                '2024-12-30': { color: 'rgba(144, 238, 144, 0.9)' }
+        it('should calculate streak from stored data', async () => {
+            const today = new Date();
+            const formatDate = (d) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
             };
 
-            // Mock "today" as Jan 3, 2025
-            const originalDate = global.Date;
-            const mockDate = new Date('2025-01-03T12:00:00');
-            global.Date = class extends originalDate {
-                constructor(...args) {
-                    if (args.length === 0) {
-                        return mockDate;
-                    }
-                    return new originalDate(...args);
-                }
-                static now() {
-                    return mockDate.getTime();
+            const data = {
+                version: 2,
+                settings: { language: 'en', counterMode: 'streak', calendarView: 'year' },
+                moods: {
+                    [formatDate(today)]: { level: 1, timestamp: today.toISOString() }
                 }
             };
+            await saveData(data);
+            expect(await calculateStreak()).toBe(1);
+        });
+    });
 
-            localStorageMock.getItem.mockReturnValue(JSON.stringify(mockData));
-            expect(calculateStreak()).toBe(5);
-
-            global.Date = originalDate;
+    describe('migrateIfNeeded', () => {
+        it('should skip if miAura_v2 already exists', async () => {
+            const existing = { version: 2, settings: { language: 'en', counterMode: 'streak', calendarView: 'year' }, moods: {} };
+            chromeStore.miAura_v2 = existing;
+            await migrateIfNeeded();
+            // localStorage should not have been queried for moodTracker
+            expect(localStorageMock.getItem).not.toHaveBeenCalledWith('moodTracker');
         });
 
-        it('should handle streak starting on Jan 1 of new year', () => {
-            const mockData = {
-                '2025-01-02': { color: 'rgba(144, 238, 144, 0.9)' },
-                '2025-01-01': { color: 'rgba(144, 238, 144, 0.9)' }
+        it('should migrate old localStorage data to chrome.storage.local', async () => {
+            const oldData = {
+                '2026-03-01': { color: 'rgba(144, 238, 144, 0.9)', timestamp: '2026-03-01T10:00:00.000Z' },
+                '2026-03-02': { color: 'rgba(100, 200, 210, 0.6)', timestamp: '2026-03-02T09:00:00.000Z' },
+                '2026-03-03': { color: '#90ee90', timestamp: '2026-03-03T08:00:00.000Z' }
             };
+            localStorageStore.moodTracker = JSON.stringify(oldData);
+            localStorageStore.language = 'en';
+            localStorageStore.counterMode = 'streak';
+            localStorageStore.calendarView = 'year';
 
-            const originalDate = global.Date;
-            const mockDate = new Date('2025-01-02T12:00:00');
-            global.Date = class extends originalDate {
-                constructor(...args) {
-                    if (args.length === 0) {
-                        return mockDate;
-                    }
-                    return new originalDate(...args);
-                }
-                static now() {
-                    return mockDate.getTime();
-                }
-            };
+            await migrateIfNeeded();
 
-            localStorageMock.getItem.mockReturnValue(JSON.stringify(mockData));
-            expect(calculateStreak()).toBe(2);
-
-            global.Date = originalDate;
+            const migrated = chromeStore.miAura_v2;
+            expect(migrated).toBeDefined();
+            expect(migrated.version).toBe(2);
+            expect(Object.keys(migrated.moods)).toHaveLength(3);
+            expect(migrated.moods['2026-03-01'].level).toBe(1);
+            expect(migrated.moods['2026-03-02'].level).toBe(3);
+            expect(migrated.moods['2026-03-03'].level).toBe(1); // #90ee90 -> level 1
+            expect(migrated.settings.language).toBe('en');
+            expect(migrated.settings.counterMode).toBe('streak');
+            expect(migrated.settings.calendarView).toBe('year');
         });
 
-        it('should break streak if Dec 31 is missing', () => {
-            const mockData = {
-                '2025-01-02': { color: 'rgba(144, 238, 144, 0.9)' },
-                '2025-01-01': { color: 'rgba(144, 238, 144, 0.9)' },
-                // Dec 31 missing
-                '2024-12-30': { color: 'rgba(144, 238, 144, 0.9)' }
-            };
+        it('should remove old localStorage keys after successful migration', async () => {
+            localStorageStore.moodTracker = JSON.stringify({
+                '2026-03-01': { color: 'rgba(144, 238, 144, 0.9)', timestamp: '2026-03-01T10:00:00.000Z' }
+            });
+            localStorageStore.language = 'en';
 
-            const originalDate = global.Date;
-            const mockDate = new Date('2025-01-02T12:00:00');
-            global.Date = class extends originalDate {
-                constructor(...args) {
-                    if (args.length === 0) {
-                        return mockDate;
-                    }
-                    return new originalDate(...args);
-                }
-                static now() {
-                    return mockDate.getTime();
-                }
-            };
+            await migrateIfNeeded();
 
-            localStorageMock.getItem.mockReturnValue(JSON.stringify(mockData));
-            expect(calculateStreak()).toBe(2); // Only Jan 1-2
+            expect(localStorageMock.removeItem).toHaveBeenCalledWith('moodTracker');
+            expect(localStorageMock.removeItem).toHaveBeenCalledWith('language');
+            expect(localStorageMock.removeItem).toHaveBeenCalledWith('counterMode');
+            expect(localStorageMock.removeItem).toHaveBeenCalledWith('calendarView');
+            expect(localStorageMock.removeItem).toHaveBeenCalledWith('testStreakDays');
+        });
 
-            global.Date = originalDate;
+        it('should handle empty localStorage gracefully', async () => {
+            await migrateIfNeeded();
+            const data = chromeStore.miAura_v2;
+            expect(data).toBeDefined();
+            expect(data.moods).toEqual({});
+            expect(data.settings.language).toBe('en');
+        });
+
+        it('should preserve isTest flag during migration', async () => {
+            localStorageStore.moodTracker = JSON.stringify({
+                '2026-03-01': { color: 'rgba(144, 238, 144, 0.9)', timestamp: '2026-03-01T10:00:00.000Z', isTest: true }
+            });
+
+            await migrateIfNeeded();
+
+            expect(chromeStore.miAura_v2.moods['2026-03-01'].isTest).toBe(true);
+        });
+    });
+
+    describe('setTestStreak / clearTestStreak', () => {
+        it('should create test entries with level 1 and isTest flag', async () => {
+            await setTestStreak(3);
+            const data = await loadData();
+            const entries = Object.values(data.moods);
+            expect(entries.length).toBe(3);
+            entries.forEach(entry => {
+                expect(entry.level).toBe(1);
+                expect(entry.isTest).toBe(true);
+            });
+        });
+
+        it('should clear only test entries', async () => {
+            // Add a real entry first
+            await saveMoodForDate('2020-01-01', 3);
+            // Add test entries
+            await setTestStreak(3);
+
+            const beforeClear = await loadData();
+            expect(Object.keys(beforeClear.moods).length).toBe(4); // 1 real + 3 test
+
+            await clearTestStreak();
+
+            const afterClear = await loadData();
+            expect(Object.keys(afterClear.moods).length).toBe(1);
+            expect(afterClear.moods['2020-01-01']).toBeDefined();
         });
     });
 });

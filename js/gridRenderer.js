@@ -2,20 +2,22 @@
  * Grid renderer module - handles year/month/week calendar grid rendering
  */
 
-import { getMoodData, migrateColor, getCounterMode, calculateStreak, getStreakHeatLevel, getCalendarView } from './storage.js';
+import { loadData, calculateStreakFromMoods, getStreakHeatLevel } from './storage.js';
+import { LEVEL_TO_COLOR } from './themes.js';
 import { generateYearDates, getTodayDateString, formatDateForDisplay, formatDateString } from './dateUtils.js';
-import { getCurrentLanguage, getMoodLabel, getMoodLevel, t } from './localization.js';
+import { getMoodLabel, t } from './localization.js';
 import { getViewYear, getActualYear, getViewMonth, getViewWeekStart } from './state.js';
 
 /**
- * Creates a single day cell element
+ * Creates a single day cell element (year view)
  * @param {string} dateString - Date in YYYY-MM-DD format
  * @param {Date} date - Date object
- * @param {Object|null} moodEntry - Mood data for the date
- * @param {boolean} isToday - Whether this is today's date
- * @returns {HTMLElement} - The day cell element
+ * @param {Object|null} moodEntry - { level, timestamp } or null
+ * @param {boolean} isToday
+ * @param {string} language - Current language code
+ * @returns {HTMLElement}
  */
-function createDayCell(dateString, date, moodEntry, isToday) {
+function createDayCell(dateString, date, moodEntry, isToday, language) {
     const cell = document.createElement('div');
     cell.className = 'day-cell';
 
@@ -24,11 +26,10 @@ function createDayCell(dateString, date, moodEntry, isToday) {
     }
 
     if (moodEntry) {
-        const color = migrateColor(moodEntry.color);
+        const color = LEVEL_TO_COLOR[moodEntry.level];
         cell.style.background = color;
         cell.classList.add('logged');
 
-        const language = getCurrentLanguage();
         const formattedDate = formatDateForDisplay(date, language);
         const mood = getMoodLabel(color, language);
         cell.setAttribute('data-tooltip', `${formattedDate} • ${mood}`);
@@ -39,9 +40,11 @@ function createDayCell(dateString, date, moodEntry, isToday) {
 
 /**
  * Renders the year grid with mood data
+ * @param {Object} moods - The moods map from data
+ * @param {string} language - Current language code
  * @returns {number} - Number of logged days
  */
-export function renderYearGrid() {
+function renderYearGrid(moods, language) {
     const grid = document.getElementById('yearGrid');
     if (!grid) return 0;
 
@@ -49,17 +52,16 @@ export function renderYearGrid() {
 
     const viewYear = getViewYear();
     const currentYear = getActualYear();
-    const moodData = getMoodData();
     const today = getTodayDateString();
     const yearDates = generateYearDates(viewYear);
 
     let loggedCount = 0;
 
     yearDates.forEach(({ date, dateString }) => {
-        const moodEntry = moodData[dateString];
+        const moodEntry = moods[dateString];
         const isToday = dateString === today && viewYear === currentYear;
 
-        const cell = createDayCell(dateString, date, moodEntry, isToday);
+        const cell = createDayCell(dateString, date, moodEntry, isToday, language);
         grid.appendChild(cell);
 
         if (moodEntry) {
@@ -71,57 +73,16 @@ export function renderYearGrid() {
 }
 
 /**
- * Updates the year display and logged days count
- * @param {number} loggedCount - Number of logged days
- */
-export function updateYearStats(loggedCount) {
-    const yearDisplay = document.getElementById('yearDisplay');
-    const loggedDays = document.getElementById('loggedDays');
-    const language = getCurrentLanguage();
-    const counterMode = getCounterMode();
-
-    if (yearDisplay) {
-        yearDisplay.textContent = getViewYear();
-    }
-
-    if (loggedDays) {
-        if (counterMode === 'streak') {
-            const streak = calculateStreak();
-            const heatLevel = getStreakHeatLevel(streak);
-            const streakText = t('dayStreak', language);
-
-            loggedDays.innerHTML = `
-                <span class="days-count">${streak}</span>
-                <span class="days-word">${streakText}</span>
-            `;
-            loggedDays.title = `${streak} ${t('dayStreak', language)}`;
-
-            // Update heat level for bubble animation
-            loggedDays.className = 'streak-badge';
-            loggedDays.dataset.heatLevel = heatLevel;
-        } else {
-            const daysText = t('daysLogged', language).split(' ');
-            loggedDays.innerHTML = `
-                <span class="days-count">${loggedCount}</span>
-                <span class="days-word">${daysText[0]}</span>
-            `;
-            loggedDays.title = t('daysLogged', language);
-            loggedDays.className = '';
-            delete loggedDays.dataset.heatLevel;
-        }
-    }
-}
-
-/**
  * Creates a large day cell for month/week view
- * @param {string} dateString - Date in YYYY-MM-DD format
+ * @param {string} _dateString - Date in YYYY-MM-DD format
  * @param {Date} date - Date object
- * @param {Object|null} moodEntry - Mood data for the date
- * @param {boolean} isToday - Whether this is today's date
+ * @param {Object|null} moodEntry - { level, timestamp } or null
+ * @param {boolean} isToday
  * @param {string} viewMode - 'month' or 'week'
- * @returns {HTMLElement} - The day cell element
+ * @param {string} language - Current language code
+ * @returns {HTMLElement}
  */
-function createLargeDayCell(_dateString, date, moodEntry, isToday, viewMode) {
+function createLargeDayCell(_dateString, date, moodEntry, isToday, viewMode, language) {
     const cell = document.createElement('div');
     cell.className = `day-cell-large day-cell-${viewMode}`;
 
@@ -129,24 +90,21 @@ function createLargeDayCell(_dateString, date, moodEntry, isToday, viewMode) {
         cell.classList.add('today');
     }
 
-    // Add day number
     const dayNum = document.createElement('span');
     dayNum.className = 'day-num';
     dayNum.textContent = date.getDate();
     cell.appendChild(dayNum);
 
     if (moodEntry) {
-        const color = migrateColor(moodEntry.color);
+        const color = LEVEL_TO_COLOR[moodEntry.level];
         cell.style.background = color;
         cell.classList.add('logged');
 
-        const language = getCurrentLanguage();
         const mood = getMoodLabel(color, language);
         cell.setAttribute('data-tooltip', mood);
 
-        // Set mood level for bar graph height in week view
         if (viewMode === 'week') {
-            cell.dataset.level = getMoodLevel(color);
+            cell.dataset.level = moodEntry.level;
         }
     }
 
@@ -155,9 +113,11 @@ function createLargeDayCell(_dateString, date, moodEntry, isToday, viewMode) {
 
 /**
  * Renders the month grid with mood data
+ * @param {Object} moods - The moods map
+ * @param {string} language - Current language code
  * @returns {number} - Number of logged days in month
  */
-function renderMonthGrid() {
+function renderMonthGrid(moods, language) {
     const grid = document.getElementById('yearGrid');
     if (!grid) return 0;
 
@@ -166,7 +126,6 @@ function renderMonthGrid() {
 
     const viewYear = getViewYear();
     const viewMonth = getViewMonth();
-    const moodData = getMoodData();
     const today = getTodayDateString();
 
     // Add day headers
@@ -178,16 +137,13 @@ function renderMonthGrid() {
         grid.appendChild(header);
     });
 
-    // Get first day of month and total days
     const firstDay = new Date(viewYear, viewMonth, 1);
     const lastDay = new Date(viewYear, viewMonth + 1, 0);
     const totalDays = lastDay.getDate();
 
-    // Monday = 0, Sunday = 6 for our grid
     let startDay = firstDay.getDay() - 1;
     if (startDay < 0) startDay = 6;
 
-    // Add empty cells for days before month starts
     for (let i = 0; i < startDay; i++) {
         const empty = document.createElement('div');
         empty.className = 'day-cell-empty';
@@ -196,14 +152,13 @@ function renderMonthGrid() {
 
     let loggedCount = 0;
 
-    // Add day cells
     for (let day = 1; day <= totalDays; day++) {
         const date = new Date(viewYear, viewMonth, day);
         const dateString = formatDateString(date);
-        const moodEntry = moodData[dateString];
+        const moodEntry = moods[dateString];
         const isToday = dateString === today;
 
-        const cell = createLargeDayCell(dateString, date, moodEntry, isToday, 'month');
+        const cell = createLargeDayCell(dateString, date, moodEntry, isToday, 'month', language);
         grid.appendChild(cell);
 
         if (moodEntry) {
@@ -216,9 +171,11 @@ function renderMonthGrid() {
 
 /**
  * Renders the week grid with mood data (vertical layout)
+ * @param {Object} moods - The moods map
+ * @param {string} language - Current language code
  * @returns {number} - Number of logged days in week
  */
-function renderWeekGrid() {
+function renderWeekGrid(moods, language) {
     const grid = document.getElementById('yearGrid');
     if (!grid) return 0;
 
@@ -226,35 +183,28 @@ function renderWeekGrid() {
     grid.className = 'week-grid';
 
     const weekStart = getViewWeekStart();
-    const moodData = getMoodData();
     const today = getTodayDateString();
-    const language = getCurrentLanguage();
 
-    // Full day names for vertical layout
     const dayNames = getDayNames(language);
 
     let loggedCount = 0;
 
-    // Add 7 day rows (vertical)
     for (let i = 0; i < 7; i++) {
         const date = new Date(weekStart);
         date.setDate(weekStart.getDate() + i);
         const dateString = formatDateString(date);
-        const moodEntry = moodData[dateString];
+        const moodEntry = moods[dateString];
         const isToday = dateString === today;
 
-        // Create row container
         const row = document.createElement('div');
         row.className = 'week-day-row';
 
-        // Add day name
         const dayName = document.createElement('span');
         dayName.className = 'day-name-week';
         dayName.textContent = dayNames[i];
         row.appendChild(dayName);
 
-        // Add day cell
-        const cell = createLargeDayCell(dateString, date, moodEntry, isToday, 'week');
+        const cell = createLargeDayCell(dateString, date, moodEntry, isToday, 'week', language);
         row.appendChild(cell);
 
         grid.appendChild(row);
@@ -269,14 +219,13 @@ function renderWeekGrid() {
 
 /**
  * Gets localized short day names (Mon, Tue, etc.)
- * @param {string} language - Language code
- * @returns {string[]} - Array of day names starting with Monday
+ * @param {string} language
+ * @returns {string[]}
  */
 function getDayNames(language) {
     const localeMap = { en: 'en-US', fr: 'fr-FR', pt: 'pt-BR' };
     const locale = localeMap[language] || 'en-US';
     const days = [];
-    // Start from Monday (Jan 3, 2000 was a Monday)
     for (let i = 0; i < 7; i++) {
         days.push(new Date(2000, 0, 3 + i).toLocaleDateString(locale, { weekday: 'short' }));
     }
@@ -285,12 +234,13 @@ function getDayNames(language) {
 
 /**
  * Updates the display header based on view mode
- * @param {number} loggedCount - Number of logged days
+ * @param {number} loggedCount
+ * @param {Object} data - The full miAura_v2 data object
  */
-function updateDisplayHeader(loggedCount) {
+function updateDisplayHeader(loggedCount, data) {
     const yearDisplay = document.getElementById('yearDisplay');
-    const language = getCurrentLanguage();
-    const calendarView = getCalendarView();
+    const language = data.settings.language;
+    const calendarView = data.settings.calendarView;
 
     if (yearDisplay) {
         if (calendarView === 'year') {
@@ -308,11 +258,11 @@ function updateDisplayHeader(loggedCount) {
 
     // Update stats badge
     const loggedDays = document.getElementById('loggedDays');
-    const counterMode = getCounterMode();
+    const counterMode = data.settings.counterMode;
 
     if (loggedDays) {
         if (counterMode === 'streak') {
-            const streak = calculateStreak();
+            const streak = calculateStreakFromMoods(data.moods);
             const heatLevel = getStreakHeatLevel(streak);
             const streakText = t('dayStreak', language);
 
@@ -338,8 +288,8 @@ function updateDisplayHeader(loggedCount) {
 
 /**
  * Gets localized month names
- * @param {string} language - Language code
- * @returns {string[]} - Array of month names
+ * @param {string} language
+ * @returns {string[]}
  */
 function getMonthNames(language) {
     const localeMap = { en: 'en-US', fr: 'fr-FR', pt: 'pt-BR' };
@@ -352,10 +302,18 @@ function getMonthNames(language) {
 }
 
 /**
- * Full grid load - renders grid based on view mode and updates stats
+ * Full grid load - renders grid based on view mode and updates stats.
+ * Accepts an optional data parameter to avoid redundant storage reads.
+ * @param {Object} [data] - Pre-loaded miAura_v2 data; fetched if omitted
  */
-export function loadYearGrid() {
-    const calendarView = getCalendarView();
+export async function loadYearGrid(data = null) {
+    if (!data) {
+        data = await loadData();
+    }
+
+    const calendarView = data.settings.calendarView;
+    const language = data.settings.language;
+    const moods = data.moods;
     const grid = document.getElementById('yearGrid');
     let loggedCount = 0;
 
@@ -365,12 +323,12 @@ export function loadYearGrid() {
     }
 
     if (calendarView === 'month') {
-        loggedCount = renderMonthGrid();
+        loggedCount = renderMonthGrid(moods, language);
     } else if (calendarView === 'week') {
-        loggedCount = renderWeekGrid();
+        loggedCount = renderWeekGrid(moods, language);
     } else {
-        loggedCount = renderYearGrid();
+        loggedCount = renderYearGrid(moods, language);
     }
 
-    updateDisplayHeader(loggedCount);
+    updateDisplayHeader(loggedCount, data);
 }

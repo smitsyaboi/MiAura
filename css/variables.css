@@ -2,6 +2,14 @@
  * CSS Variables - Design tokens and custom properties
  */
 
+@font-face {
+    font-family: 'Fredoka';
+    src: url('../fonts/Fredoka.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     /* Colors */
     --color-text-primary: #2d4a3e;
@@ -29,7 +37,7 @@
     --shadow-inset-depth: inset 0 -2px 6px rgba(0, 0, 0, 0.03);
 
     /* Typography */
-    --font-family: 'Segoe UI', 'Trebuchet MS', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    --font-family: 'Fredoka', 'Segoe UI', sans-serif;
     --text-shadow-light: 0 1px 2px rgba(255, 255, 255, 0.8);
     --text-shadow-button: 0 1px 1px rgba(255, 255, 255, 0.8);
 

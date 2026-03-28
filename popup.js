@@ -3,10 +3,11 @@
  * A daily mood tracking Chrome extension with Frutiger Aero aesthetic
  */
 
-import { getMoodForDate, migrateColor, getCounterMode, setCounterMode, getCalendarView, setCalendarView, setTestStreak, clearTestStreak } from './js/storage.js';
+import { migrateIfNeeded, loadData, setSetting, setTestStreak, clearTestStreak } from './js/storage.js';
+import { LEVEL_TO_COLOR } from './js/themes.js';
 import { getTodayDateString } from './js/dateUtils.js';
 import {
-    getCurrentLanguage,
+    initLanguageCache,
     setCurrentLanguage,
     t,
     getToggleLabel,
@@ -20,9 +21,10 @@ import { initNavigation } from './js/navigation.js';
 
 /**
  * Updates all UI text to the current language
+ * @param {Object} [data] - Optional preloaded data; if omitted grid reload will fetch fresh data
  */
-function updateLanguage() {
-    const lang = getCurrentLanguage();
+async function updateLanguage(data) {
+    const lang = data ? data.settings.language : (await loadData()).settings.language;
     const navBtn = document.getElementById('navBtn');
     const page1 = document.getElementById('page1');
 
@@ -45,7 +47,7 @@ function updateLanguage() {
     document.getElementById('languageSelect').value = lang;
 
     // Update counter mode button active states
-    const counterMode = getCounterMode();
+    const counterMode = data ? data.settings.counterMode : (await loadData()).settings.counterMode;
     document.querySelectorAll('[data-mode]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.mode === counterMode);
     });
@@ -73,13 +75,13 @@ function updateLanguage() {
     if (loggedDaysEl.textContent) {
         const count = loggedDaysEl.textContent.match(/\d+/);
         if (count) {
-            loggedDaysEl.innerHTML = `${count[0]}<br>${t('daysLogged', lang)}`; // Changed to innerHTML with <br>
+            loggedDaysEl.innerHTML = `${count[0]}<br>${t('daysLogged', lang)}`;
         }
     }
 
     // Reload year grid to update tooltips if on calendar page
     if (!page1.classList.contains('active')) {
-        loadYearGrid();
+        await loadYearGrid(data);
     }
 }
 
@@ -88,10 +90,9 @@ function updateLanguage() {
  */
 function setupLanguageSelect() {
     const select = document.getElementById('languageSelect');
-    select.value = getCurrentLanguage();
-    select.addEventListener('change', () => {
-        setCurrentLanguage(select.value);
-        updateLanguage();
+    select.addEventListener('change', async () => {
+        await setCurrentLanguage(select.value);
+        await updateLanguage();
     });
 }
 
@@ -100,14 +101,13 @@ function setupLanguageSelect() {
  */
 function setupCounterModeButtons() {
     document.querySelectorAll('[data-mode]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             const mode = btn.dataset.mode;
-            setCounterMode(mode);
-            // Update active states
+            await setSetting('counterMode', mode);
             document.querySelectorAll('[data-mode]').forEach(b => {
                 b.classList.toggle('active', b.dataset.mode === mode);
             });
-            loadYearGrid();
+            await loadYearGrid();
         });
     });
 }
@@ -115,21 +115,21 @@ function setupCounterModeButtons() {
 /**
  * Sets up calendar view toggle buttons on settings page
  */
-function setupViewToggle() {
+async function setupViewToggle() {
     document.querySelectorAll('[data-view]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             const view = btn.dataset.view;
-            setCalendarView(view);
-            // Update active states
+            await setSetting('calendarView', view);
             document.querySelectorAll('[data-view]').forEach(b => {
                 b.classList.toggle('active', b.dataset.view === view);
             });
-            loadYearGrid();
+            await loadYearGrid();
         });
     });
 
     // Set initial active state
-    const currentView = getCalendarView();
+    const data = await loadData();
+    const currentView = data.settings.calendarView;
     document.querySelectorAll('[data-view]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.view === currentView);
     });
@@ -137,7 +137,6 @@ function setupViewToggle() {
 
 /**
  * Sets up test mode controls on settings page
- * Test mode is hidden by default - tap settings title 5 times to reveal
  */
 function setupTestControls() {
     const setBtn = document.getElementById('setTestStreak');
@@ -146,7 +145,6 @@ function setupTestControls() {
     const settingsTitle = document.getElementById('settingsTitle');
     const testSection = document.querySelector('.test-section');
 
-    // Secret activation: tap settings title 5 times
     let tapCount = 0;
     let tapTimer = null;
     const page3 = document.getElementById('page3');
@@ -158,7 +156,6 @@ function setupTestControls() {
 
             if (tapCount >= 5) {
                 testSection.classList.toggle('visible');
-                // Enable scrolling when test mode is visible
                 if (page3) {
                     page3.classList.toggle('scrollable', testSection.classList.contains('visible'));
                 }
@@ -172,41 +169,40 @@ function setupTestControls() {
     }
 
     if (setBtn) {
-        setBtn.addEventListener('click', () => {
+        setBtn.addEventListener('click', async () => {
             const days = parseInt(input.value, 10);
             if (days > 0 && days <= 365) {
-                setTestStreak(days);
-                loadYearGrid();
+                await setTestStreak(days);
+                await loadYearGrid();
             }
         });
     }
 
     if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
-            clearTestStreak();
-            loadYearGrid();
+        clearBtn.addEventListener('click', async () => {
+            await clearTestStreak();
+            await loadYearGrid();
         });
     }
 }
 
 /**
  * Checks if today has a mood logged and updates UI accordingly
+ * @param {Object} data - The loaded miAura_v2 data
  */
-function checkTodayLogged() {
+function checkTodayLogged(data) {
     const today = getTodayDateString();
-    const todayMood = getMoodForDate(today);
+    const todayMood = data.moods[today];
     const colorLabel = document.getElementById('colorLabel');
     const signalBars = document.getElementById('signalBars');
-    const lang = getCurrentLanguage();
+    const lang = data.settings.language;
 
     if (todayMood) {
-        // Today is logged - show that mood
-        const color = migrateColor(todayMood.color);
+        const color = LEVEL_TO_COLOR[todayMood.level];
         setSelectedColor(color);
 
         document.querySelectorAll('.color-option').forEach((option) => {
-            const optionColor = option.dataset.color;
-            if (optionColor === color) {
+            if (option.dataset.color === color) {
                 const level = option.dataset.level;
                 const labelKey = getLabelKey(lang);
                 const label = option.dataset[labelKey];
@@ -216,7 +212,6 @@ function checkTodayLogged() {
             }
         });
     } else {
-        // Not logged yet - default to "Okay" (level 3)
         signalBars.className = 'signal-bars level-3';
         setSelectedColor('rgba(100, 200, 210, 0.6)');
         colorLabel.textContent = defaultMoodLabels[lang];
@@ -225,21 +220,26 @@ function checkTodayLogged() {
 }
 
 /**
- * Initializes the application
+ * Initializes the application (async)
  */
-function init() {
+async function init() {
+    await migrateIfNeeded();
+    const data = await loadData();
+
+    // Seed the language cache so sync helpers (t, getLabelKey, …) work immediately
+    initLanguageCache(data.settings.language);
+
     resetViewYear();
-    checkTodayLogged();
-    updateLanguage();
-    setupAllEventListeners(updateLanguage);
+    checkTodayLogged(data);
+    await updateLanguage(data);
+    setupAllEventListeners(() => updateLanguage());
     setupLanguageSelect();
     setupCounterModeButtons();
-    setupViewToggle();
+    await setupViewToggle();
     setupTestControls();
-    loadYearGrid();
+    await loadYearGrid(data);
     initNavigation();
 }
 
 // Start the application when DOM is ready
 document.addEventListener('DOMContentLoaded', init);
-

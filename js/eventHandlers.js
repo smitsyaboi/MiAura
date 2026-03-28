@@ -2,7 +2,7 @@
  * Event handlers module - organized event listener setup
  */
 
-import { saveMoodForDate, getCalendarView } from './storage.js';
+import { saveMoodForDate, getSetting } from './storage.js';
 import { getTodayDateString } from './dateUtils.js';
 import { cycleLanguage, getLabelKey } from './localization.js';
 import { getSelectedColor, setSelectedColor, incrementViewYear, decrementViewYear, incrementViewMonth, decrementViewMonth, incrementViewWeek, decrementViewWeek } from './state.js';
@@ -35,8 +35,8 @@ export function showPage(pageId) {
 export function setupLanguageToggle(onLanguageChange) {
     const langToggle = document.getElementById('langToggle');
     if (langToggle) {
-        langToggle.addEventListener('click', () => {
-            cycleLanguage();
+        langToggle.addEventListener('click', async () => {
+            await cycleLanguage();
             onLanguageChange();
         });
     }
@@ -50,8 +50,8 @@ export function setupYearNavigation() {
     const nextBtn = document.getElementById('nextYear');
 
     if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            const view = getCalendarView();
+        prevBtn.addEventListener('click', async () => {
+            const view = await getSetting('calendarView');
             if (view === 'month') {
                 decrementViewMonth();
             } else if (view === 'week') {
@@ -59,13 +59,13 @@ export function setupYearNavigation() {
             } else {
                 decrementViewYear();
             }
-            loadYearGrid();
+            await loadYearGrid();
         });
     }
 
     if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            const view = getCalendarView();
+        nextBtn.addEventListener('click', async () => {
+            const view = await getSetting('calendarView');
             if (view === 'month') {
                 incrementViewMonth();
             } else if (view === 'week') {
@@ -73,7 +73,7 @@ export function setupYearNavigation() {
             } else {
                 incrementViewYear();
             }
-            loadYearGrid();
+            await loadYearGrid();
         });
     }
 }
@@ -108,7 +108,6 @@ export function setupMainNavigation() {
 export function setupMoodSelection() {
     const signalBars = document.getElementById('signalBars');
     const colorLabel = document.getElementById('colorLabel');
-    let hoveredLabel = null;
 
     document.querySelectorAll('.color-option').forEach((option) => {
         // Hover enter - show mood preview
@@ -116,7 +115,6 @@ export function setupMoodSelection() {
             const level = option.dataset.level;
             const labelKey = getLabelKey();
             const label = option.dataset[labelKey];
-            hoveredLabel = label;
 
             signalBars.className = 'signal-bars level-' + level;
             colorLabel.textContent = label;
@@ -125,13 +123,11 @@ export function setupMoodSelection() {
 
         // Hover leave - restore selected or hide
         option.addEventListener('mouseleave', () => {
-            hoveredLabel = null;
             const selectedColor = getSelectedColor();
 
             if (!selectedColor) {
                 colorLabel.classList.remove('visible');
             } else {
-                // Restore selected mood's display
                 const selectedOption = document.querySelector(`[data-color="${selectedColor}"]`);
                 if (selectedOption) {
                     const level = selectedOption.dataset.level;
@@ -144,8 +140,9 @@ export function setupMoodSelection() {
         });
 
         // Click - select mood and save
-        option.addEventListener('click', () => {
+        option.addEventListener('click', async () => {
             const color = option.dataset.color;
+            const level = parseInt(option.dataset.level, 10);
             setSelectedColor(color);
 
             const labelKey = getLabelKey();
@@ -153,9 +150,9 @@ export function setupMoodSelection() {
             colorLabel.textContent = label;
             colorLabel.classList.add('visible');
 
-            // Save mood
+            // Save mood (level integer, not colour string)
             const today = getTodayDateString();
-            saveMoodForDate(today, color);
+            await saveMoodForDate(today, level);
 
             // Navigate to calendar after short delay
             setTimeout(() => {
