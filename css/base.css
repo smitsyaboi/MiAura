@@ -10,12 +10,12 @@ body {
     height: var(--popup-height);
     overflow: hidden;
     max-width: 100%;
-    border-radius: var(--border-radius-sm);
+    border-radius: 0;
 }
 
 .container {
     background: var(--color-container-gradient);
-    border-radius: var(--border-radius-sm);
+    border-radius: 0;
     padding: 0;
     box-shadow:
         0 2px 2px rgba(0, 0, 0, 0.1),
