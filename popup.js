@@ -3,24 +3,82 @@
  * A daily mood tracking Chrome extension with Frutiger Aero aesthetic
  */
 
-import { migrateIfNeeded, loadData, setSetting, setTestStreak, clearTestStreak } from './js/storage.js';
-import { LEVEL_TO_COLOR } from './js/themes.js';
+import { migrateIfNeeded, loadData, setSetting, saveMoodForDate, setTestStreak, clearTestStreak } from './js/storage.js';
+import { MOOD_THEMES } from './js/themes.js';
 import { getTodayDateString } from './js/dateUtils.js';
 import {
     initLanguageCache,
     setCurrentLanguage,
-    t,
-    getLabelKey,
-    defaultMoodLabels
+    getCachedLanguage,
+    t
 } from './js/localization.js';
-import { getSelectedColor, setSelectedColor, resetViewYear } from './js/state.js';
+import { resetViewYear } from './js/state.js';
 import { loadYearGrid } from './js/gridRenderer.js';
-import { setupAllEventListeners } from './js/eventHandlers.js';
+import { setupAllEventListeners, setupMoodSelection, showPage } from './js/eventHandlers.js';
 import { initNavigation } from './js/navigation.js';
+
+/** Currently selected mood level (null if none) */
+let selectedLevel = null;
+
+/**
+ * Applies a mood theme to the page, hero orb, glow, and nav bar
+ * @param {number} level - Mood level 1-5
+ * @param {boolean} isHover - If true, skip particles
+ */
+function applyMoodTheme(level, isHover = false) {
+    const theme = MOOD_THEMES[level] || MOOD_THEMES[3];
+    const page1 = document.getElementById('page1');
+    const heroOrb = document.getElementById('heroOrb');
+    const heroGlow = document.getElementById('heroGlow');
+    const vistaNav = document.querySelector('.vista-nav');
+    const colorLabel = document.getElementById('colorLabel');
+    const particles = document.getElementById('particles');
+
+    // Background
+    page1.style.background = theme.bg;
+
+    // Hero orb
+    heroOrb.style.background = theme.orb;
+    heroOrb.style.boxShadow = `0 10px 32px ${theme.glow}, 0 0 60px ${theme.glow}`;
+    heroOrb.style.animationDuration = theme.floatSpeed;
+
+    // Glow
+    heroGlow.style.background = theme.glow;
+
+    // Nav bar
+    vistaNav.style.backgroundImage = `
+        linear-gradient(to bottom, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.20) 48%, rgba(255,255,255,0.00) 49%, rgba(0,0,0,0.08) 100%),
+        ${theme.nav}
+    `;
+
+    // Selector orb active state
+    document.querySelectorAll('.mood-orb').forEach(o => {
+        o.classList.toggle('active', parseInt(o.dataset.level) === level);
+    });
+
+    // Label
+    const lang = getCachedLanguage();
+    colorLabel.textContent = theme.label[lang] || theme.label.en;
+    colorLabel.classList.add('visible');
+
+    // Particles
+    particles.innerHTML = '';
+    if (theme.particle && !isHover) {
+        for (let i = 0; i < 4; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.width = `${Math.random() * 4 + 2}px`;
+            p.style.height = p.style.width;
+            p.style.left = `${Math.random() * 80 + 10}%`;
+            p.style.animationDuration = `${Math.random() * 3 + 3}s`;
+            p.style.animationDelay = `${Math.random() * 3}s`;
+            particles.appendChild(p);
+        }
+    }
+}
 
 /**
  * Updates all UI text to the current language
- * @param {Object} [data] - Optional preloaded data; if omitted grid reload will fetch fresh data
  */
 async function updateLanguage(data) {
     const lang = data ? data.settings.language : (await loadData()).settings.language;
@@ -47,27 +105,16 @@ async function updateLanguage(data) {
         btn.classList.toggle('active', btn.dataset.mode === counterMode);
     });
 
-    // Update mood label if there's a selected mood
-    const selectedColor = getSelectedColor();
-    if (selectedColor) {
-        const selectedOption = document.querySelector(`[data-color="${selectedColor}"]`);
-        if (selectedOption) {
-            const labelKey = getLabelKey(lang);
-            const label = selectedOption.dataset[labelKey];
-            document.getElementById('colorLabel').textContent = label;
-        }
-    }
-
-    // Update logged days text
-    const loggedDaysEl = document.getElementById('loggedDays');
-    if (loggedDaysEl.textContent) {
-        const count = loggedDaysEl.textContent.match(/\d+/);
-        if (count) {
-            loggedDaysEl.innerHTML = `${count[0]}<br>${t('daysLogged', lang)}`;
+    // Update mood label if a level is selected
+    if (selectedLevel) {
+        const theme = MOOD_THEMES[selectedLevel];
+        if (theme) {
+            document.getElementById('colorLabel').textContent = theme.label[lang] || theme.label.en;
         }
     }
 
     // Reload year grid to update tooltips if on calendar page
+    const page1 = document.getElementById('page1');
     if (!page1.classList.contains('active')) {
         await loadYearGrid(data);
     }
@@ -101,7 +148,7 @@ function setupCounterModeButtons() {
 }
 
 /**
- * Sets up calendar view toggle buttons on settings page
+ * Sets up calendar view toggle buttons
  */
 async function setupViewToggle() {
     document.querySelectorAll('[data-view]').forEach(btn => {
@@ -174,52 +221,64 @@ function setupTestControls() {
 }
 
 /**
- * Checks if today has a mood logged and updates UI accordingly
- * @param {Object} data - The loaded miAura_v2 data
- */
-function checkTodayLogged(data) {
-    const today = getTodayDateString();
-    const todayMood = data.moods[today];
-    const colorLabel = document.getElementById('colorLabel');
-    const signalBars = document.getElementById('signalBars');
-    const lang = data.settings.language;
-
-    if (todayMood) {
-        const color = LEVEL_TO_COLOR[todayMood.level];
-        setSelectedColor(color);
-
-        document.querySelectorAll('.color-option').forEach((option) => {
-            if (option.dataset.color === color) {
-                const level = option.dataset.level;
-                const labelKey = getLabelKey(lang);
-                const label = option.dataset[labelKey];
-                signalBars.className = 'signal-bars level-' + level;
-                colorLabel.textContent = label;
-                colorLabel.classList.add('visible');
-            }
-        });
-    } else {
-        signalBars.className = 'signal-bars level-3';
-        setSelectedColor('rgba(100, 200, 210, 0.6)');
-        colorLabel.textContent = defaultMoodLabels[lang];
-        colorLabel.classList.add('visible');
-    }
-}
-
-/**
- * Initializes the application (async)
+ * Initializes the application
  */
 async function init() {
     await migrateIfNeeded();
     const data = await loadData();
 
-    // Seed the language cache so sync helpers (t, getLabelKey, …) work immediately
+    // Seed the language cache so sync helpers work immediately
     initLanguageCache(data.settings.language);
 
     resetViewYear();
-    checkTodayLogged(data);
+
+    // Set mood orb backgrounds from MOOD_THEMES
+    document.querySelectorAll('.mood-orb').forEach(orb => {
+        const level = parseInt(orb.dataset.level);
+        orb.style.background = MOOD_THEMES[level].orb;
+    });
+
+    // Check if today is already logged
+    const today = getTodayDateString();
+    const todayMood = data.moods[today];
+
+    if (todayMood) {
+        selectedLevel = todayMood.level;
+        applyMoodTheme(todayMood.level);
+    } else {
+        applyMoodTheme(3);
+    }
+
     await updateLanguage(data);
     setupAllEventListeners(() => updateLanguage());
+
+    // Set up mood selection with hover and select callbacks
+    setupMoodSelection(
+        // onMoodHover
+        (level) => {
+            if (level) {
+                applyMoodTheme(level, true);
+            } else {
+                // Restore selected or default
+                applyMoodTheme(selectedLevel || 3, !selectedLevel);
+            }
+        },
+        // onMoodSelect
+        async (level) => {
+            selectedLevel = level;
+            applyMoodTheme(level);
+
+            // Save mood
+            const today = getTodayDateString();
+            await saveMoodForDate(today, level);
+
+            // Navigate to calendar after short delay
+            setTimeout(() => {
+                showPage('page2');
+            }, 400);
+        }
+    );
+
     setupLanguageSelect();
     setupCounterModeButtons();
     await setupViewToggle();

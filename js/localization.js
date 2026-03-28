@@ -128,6 +128,14 @@ export function initLanguageCache(language) {
 }
 
 /**
+ * Returns the cached language synchronously
+ * @returns {string}
+ */
+export function getCachedLanguage() {
+    return _cachedLanguage;
+}
+
+/**
  * Gets the current language (async — reads from storage, updates cache)
  * @returns {Promise<string>}
  */
