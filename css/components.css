@@ -93,16 +93,15 @@ button:hover {
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: var(--blur-glass);
     border-radius: var(--border-radius-lg);
-    padding: 4px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow:
-        0 4px 16px rgba(0, 0, 0, 0.08),
-        0 1px 4px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.7),
-        var(--shadow-inset-depth);
+        0 2px 8px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
     display: inline-flex;
     align-items: center;
-    gap: 10px; /* Space between buttons and year display */
+    gap: 6px;
+    white-space: nowrap;
 }
 
 .year-arrow {
@@ -143,34 +142,40 @@ button:hover {
 }
 
 #yearDisplay {
-    font-size: 20px;
-    font-weight: 700;
-    min-width: 40px;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 60px;
     text-align: center;
-    color: #2d4a3e;
+    color: #1a3a4a;
+    white-space: nowrap;
 }
 
 .year-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    margin-bottom: 12px;
-    padding: 0 10px;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 0 4px;
+    gap: 6px;
+    width: 100%;
+    overflow: hidden;
 }
 
 .year-nav-row {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
 }
 
 #loggedDays {
-    padding: 4px 8px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #1a3a4a;
+    opacity: 0.6;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .days-main {
