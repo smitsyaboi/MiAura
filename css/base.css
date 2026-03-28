@@ -56,6 +56,14 @@ h1 {
     animation: fadeSlideIn 0.3s ease-out;
 }
 
+#page2.active {
+    height: 100%;
+    overflow-y: hidden;
+    padding-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
 /* Settings page scrolls only when test mode is visible */
 #page3.active {
     height: calc(100% - 50px);
