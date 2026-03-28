@@ -131,7 +131,7 @@ function buildWaveSVG(points, width, height, labels) {
         labelsSVG = labels;
     }
 
-    return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+    return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;max-width:100%;overflow:hidden;">
         <defs>
             <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%">
                 ${lineGradStops || '<stop offset="0%" stop-color="rgba(80,195,215,0.9)"/>'}
@@ -257,7 +257,7 @@ function renderYearGrid(moods, language) {
         wavePath = maskedContent;
     }
 
-    const svg = `<svg viewBox="0 0 296 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+    const svg = `<svg viewBox="0 0 296 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;max-width:100%;overflow:hidden;">
         <defs>
             <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%">
                 ${lineGradStops || '<stop offset="0%" stop-color="rgba(80,195,215,0.9)"/>'}

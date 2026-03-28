@@ -344,7 +344,7 @@ button:hover {
 .week-grid {
     display: block;
     width: 100%;
-    height: 280px;
+    height: 260px;
     border-radius: var(--border-radius-lg);
     box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.06),
@@ -437,7 +437,7 @@ button:hover {
     border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: 12px;
     padding: 3px;
-    margin: 8px auto 0;
+    margin: 8px auto 4px;
     width: fit-content;
     box-shadow:
         0 2px 8px rgba(0, 0, 0, 0.08),
