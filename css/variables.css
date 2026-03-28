@@ -12,7 +12,7 @@
 
 :root {
     /* Colors */
-    --color-text-primary: #2d4a3e;
+    --color-text-primary: #1a3a4a;
     --color-text-secondary: #666;
     --color-background-body: radial-gradient(ellipse at center, #f8f8f8, #e8e8e8);
     --color-container-gradient: linear-gradient(0deg, rgb(110 184 110 / 19%), #0054e345);
