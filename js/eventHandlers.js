@@ -16,24 +16,23 @@ export function showPage(pageId) {
     });
     document.getElementById(pageId).classList.add('active');
 
-    // Sync nav active state
-    const pageNavMap = {
-        'page1': 'navToday',
-        'page2': 'navCalendar',
-        'page3': 'navSettings'
-    };
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    const navId = pageNavMap[pageId];
-    if (navId) {
-        const navItem = document.getElementById(navId);
-        if (navItem) navItem.classList.add('active');
+    // Reset nav to default when not on mood page
+    const vistaNav = document.querySelector('.vista-nav');
+    if (pageId !== 'page1') {
+        vistaNav.style.transition = 'background-image 0.4s ease';
+        vistaNav.style.backgroundImage = `
+            linear-gradient(to bottom, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.20) 48%, rgba(255,255,255,0.00) 49%, rgba(0,0,0,0.08) 100%),
+            linear-gradient(to bottom, rgba(140,195,190,0.92) 0%, rgba(90,155,150,0.97) 100%)
+        `;
     }
 
-    if (pageId !== 'page1') {
-        loadYearGrid();
-    }
+    // Sync nav active state
+    const pageNavMap = { 'page1': 'navToday', 'page2': 'navCalendar', 'page3': 'navSettings' };
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    const navId = pageNavMap[pageId];
+    if (navId) document.getElementById(navId)?.classList.add('active');
+
+    if (pageId !== 'page1') loadYearGrid();
 }
 
 /**

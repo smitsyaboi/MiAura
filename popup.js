@@ -35,6 +35,7 @@ function applyMoodTheme(level, isHover = false) {
     const particles = document.getElementById('particles');
 
     // Background
+    page1.style.transition = 'background 0.6s ease';
     page1.style.background = theme.bg;
 
     // Hero orb
@@ -46,6 +47,7 @@ function applyMoodTheme(level, isHover = false) {
     heroGlow.style.background = theme.glow;
 
     // Nav bar
+    vistaNav.style.transition = 'background-image 0.6s ease';
     vistaNav.style.backgroundImage = `
         linear-gradient(to bottom, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.20) 48%, rgba(255,255,255,0.00) 49%, rgba(0,0,0,0.08) 100%),
         ${theme.nav}

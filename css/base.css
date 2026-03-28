@@ -21,6 +21,7 @@ body {
         0 4px 8px rgba(0, 0, 0, 0.15);
     text-align: center;
     position: relative;
+    isolation: isolate;
     overflow: hidden;
     max-width: 100%;
     box-sizing: border-box;
@@ -58,7 +59,7 @@ h1 {
 
 .page.active {
     display: block;
-    animation: fadeSlideIn 0.3s ease-out;
+    animation: fadeSlideIn 0.4s ease-out;
 }
 
 #page2.active {
@@ -67,6 +68,9 @@ h1 {
     padding-bottom: 8px;
     display: flex;
     flex-direction: column;
+    background: transparent;
+    position: relative;
+    z-index: 1;
 }
 
 /* Settings page scrolls only when test mode is visible */
