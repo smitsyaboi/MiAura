@@ -61,7 +61,9 @@ export function formatDateForDisplay(date, language) {
     const localeMap = {
         en: 'en-US',
         fr: 'fr-FR',
-        pt: 'pt-BR'
+        pt: 'pt-BR',
+        de: 'de-DE',
+        sv: 'sv-SE'
     };
     return date.toLocaleDateString(localeMap[language], {
         month: 'short',
