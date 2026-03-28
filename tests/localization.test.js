@@ -1,8 +1,23 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// Mock the storage module before importing localization
+vi.mock('../js/storage.js', () => {
+    let settings = {};
+    return {
+        getSetting: vi.fn((key) => Promise.resolve(settings[key] || undefined)),
+        setSetting: vi.fn((key, value) => {
+            settings[key] = value;
+            return Promise.resolve();
+        }),
+        __resetSettings: () => { settings = {}; }
+    };
+});
+
 import {
     getCurrentLanguage,
     setCurrentLanguage,
     cycleLanguage,
+    initLanguageCache,
     t,
     getMoodLabel,
     getMoodLevel,
@@ -12,76 +27,65 @@ import {
     defaultMoodLabels
 } from '../js/localization.js';
 
-// Mock localStorage
-const localStorageMock = (() => {
-    let store = {};
-    return {
-        getItem: vi.fn((key) => store[key] || null),
-        setItem: vi.fn((key, value) => { store[key] = value; }),
-        clear: vi.fn(() => { store = {}; })
-    };
-})();
-
-Object.defineProperty(global, 'localStorage', {
-    value: localStorageMock
-});
+import { setSetting, __resetSettings } from '../js/storage.js';
 
 describe('localization', () => {
     beforeEach(() => {
-        localStorageMock.clear();
+        __resetSettings();
         vi.clearAllMocks();
+        // Reset cache to default
+        initLanguageCache('en');
     });
 
     describe('getCurrentLanguage / setCurrentLanguage', () => {
-        it('should return "en" as default language', () => {
-            expect(getCurrentLanguage()).toBe('en');
+        it('should return "en" as default language', async () => {
+            // getSetting returns undefined for unset key, getCurrentLanguage defaults to 'en'
+            expect(await getCurrentLanguage()).toBe('en');
         });
 
-        it('should save language to localStorage', () => {
-            setCurrentLanguage('fr');
-            expect(localStorageMock.setItem).toHaveBeenCalledWith('language', 'fr');
+        it('should save language via setSetting', async () => {
+            await setCurrentLanguage('fr');
+            expect(setSetting).toHaveBeenCalledWith('language', 'fr');
         });
 
-        it('should retrieve saved language', () => {
-            localStorageMock.getItem.mockReturnValueOnce('pt');
-            expect(getCurrentLanguage()).toBe('pt');
+        it('should update cached language after set', async () => {
+            await setCurrentLanguage('pt');
+            // t() uses the cache
+            expect(t('title')).toContain('Ola');
         });
     });
 
     describe('cycleLanguage', () => {
-        it('should cycle from en to fr', () => {
-            localStorageMock.getItem.mockReturnValueOnce('en');
-            cycleLanguage();
-            expect(localStorageMock.setItem).toHaveBeenCalledWith('language', 'fr');
+        it('should cycle from en to fr', async () => {
+            initLanguageCache('en');
+            await cycleLanguage();
+            expect(setSetting).toHaveBeenCalledWith('language', 'fr');
         });
 
-        it('should cycle from fr to pt', () => {
-            localStorageMock.getItem.mockReturnValueOnce('fr');
-            cycleLanguage();
-            expect(localStorageMock.setItem).toHaveBeenCalledWith('language', 'pt');
+        it('should cycle from fr to pt', async () => {
+            initLanguageCache('fr');
+            await cycleLanguage();
+            expect(setSetting).toHaveBeenCalledWith('language', 'pt');
         });
 
-        it('should cycle from pt to en', () => {
-            localStorageMock.getItem.mockReturnValueOnce('pt');
-            cycleLanguage();
-            expect(localStorageMock.setItem).toHaveBeenCalledWith('language', 'en');
+        it('should cycle from pt to en', async () => {
+            initLanguageCache('pt');
+            await cycleLanguage();
+            expect(setSetting).toHaveBeenCalledWith('language', 'en');
         });
     });
 
     describe('t (translation function)', () => {
         it('should return English title', () => {
-            const title = t('title', 'en');
-            expect(title).toBe('Hello, how are you feeling today?');
+            expect(t('title', 'en')).toBe('Hello, how are you feeling today?');
         });
 
         it('should return French title', () => {
-            const title = t('title', 'fr');
-            expect(title).toContain('Bonjour');
+            expect(t('title', 'fr')).toContain('Bonjour');
         });
 
         it('should return Portuguese title', () => {
-            const title = t('title', 'pt');
-            expect(title).toContain('Ola');
+            expect(t('title', 'pt')).toContain('Ola');
         });
 
         it('should return English settings', () => {
@@ -98,27 +102,23 @@ describe('localization', () => {
             expect(t('dayStreak', 'pt')).toBe('sequencia');
         });
 
-        it('should use current language when not specified', () => {
-            localStorageMock.getItem.mockReturnValue('fr');
-            const title = t('title');
-            expect(title).toContain('Bonjour');
+        it('should use cached language when not specified', () => {
+            initLanguageCache('fr');
+            expect(t('title')).toContain('Bonjour');
         });
     });
 
     describe('getMoodLabel', () => {
         it('should return English mood label for Fantastic', () => {
-            const label = getMoodLabel('rgba(144, 238, 144, 0.9)', 'en');
-            expect(label).toBe('Fantastic');
+            expect(getMoodLabel('rgba(144, 238, 144, 0.9)', 'en')).toBe('Fantastic');
         });
 
         it('should return French mood label for Fantastic', () => {
-            const label = getMoodLabel('rgba(144, 238, 144, 0.9)', 'fr');
-            expect(label).toBe('Fantastique');
+            expect(getMoodLabel('rgba(144, 238, 144, 0.9)', 'fr')).toBe('Fantastique');
         });
 
         it('should return Portuguese mood label for Fantastic', () => {
-            const label = getMoodLabel('rgba(144, 238, 144, 0.9)', 'pt');
-            expect(label).toBe('Fantastico');
+            expect(getMoodLabel('rgba(144, 238, 144, 0.9)', 'pt')).toBe('Fantastico');
         });
 
         it('should return correct labels for all mood levels', () => {
@@ -129,8 +129,7 @@ describe('localization', () => {
         });
 
         it('should return falsy value for unknown color', () => {
-            const label = getMoodLabel('#unknown', 'en');
-            expect(label).toBeFalsy();
+            expect(getMoodLabel('#unknown', 'en')).toBeFalsy();
         });
     });
 
@@ -184,8 +183,7 @@ describe('localization', () => {
 
     describe('moodLabels export', () => {
         it('should have all 5 mood colors defined', () => {
-            const colors = Object.keys(moodLabels);
-            expect(colors.length).toBe(5);
+            expect(Object.keys(moodLabels).length).toBe(5);
         });
 
         it('should have all 3 languages for each color', () => {
