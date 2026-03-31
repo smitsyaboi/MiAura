@@ -43,17 +43,3 @@ export function initNavigation() {
         });
     }
 }
-
-/**
- * Updates nav state when page changes externally
- * @param {string} pageId - ID of the page being shown
- */
-export function syncNavWithPage(pageId) {
-    if (pageId === 'page1') {
-        updateNavActive('navToday');
-    } else if (pageId === 'page2') {
-        updateNavActive('navCalendar');
-    } else if (pageId === 'page3') {
-        updateNavActive('navSettings');
-    }
-}

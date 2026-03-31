@@ -59,7 +59,17 @@ export async function migrateIfNeeded() {
     };
 
     // Step 5 — write new schema
-    const newData = { version: 2, settings, moods };
+    const newData = {
+        version: 2,
+        settings,
+        moods,
+        meta: {
+            installDate: new Date().toISOString(),
+            totalOpens: 0,
+            hasReviewed: false,
+            reviewPromptShown: false
+        }
+    };
     await chrome.storage.local.set({ [STORAGE_KEY]: newData });
 
     // Step 6 — verify
@@ -92,7 +102,8 @@ export async function loadData() {
     return result[STORAGE_KEY] || {
         version: 2,
         settings: { language: 'en', counterMode: 'streak', calendarView: 'year' },
-        moods: {}
+        moods: {},
+        meta: { installDate: new Date().toISOString(), totalOpens: 0, hasReviewed: false, reviewPromptShown: false }
     };
 }
 
@@ -240,5 +251,34 @@ export async function clearTestStreak() {
         }
     }
     data.moods = cleaned;
+    await saveData(data);
+}
+
+/**
+ * Gets the review/meta metadata object
+ * @returns {Promise<Object>}
+ */
+export async function getReviewMeta() {
+    const data = await loadData();
+    return data.meta || {};
+}
+
+/**
+ * Marks the review prompt as shown (prevents future display)
+ */
+export async function markReviewPromptShown() {
+    const data = await loadData();
+    if (!data.meta) data.meta = {};
+    data.meta.reviewPromptShown = true;
+    await saveData(data);
+}
+
+/**
+ * Marks that the user has reviewed (clicked the review link)
+ */
+export async function markReviewed() {
+    const data = await loadData();
+    if (!data.meta) data.meta = {};
+    data.meta.hasReviewed = true;
     await saveData(data);
 }
