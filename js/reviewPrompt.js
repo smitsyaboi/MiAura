@@ -40,7 +40,7 @@ function showBanner() {
         await markReviewPromptShown();
         await markReviewed();
         hideBanner();
-        chrome.tabs.create({ url: STORE_URL });
+        window.open(STORE_URL, '_blank');
     });
 
     document.getElementById('reviewDismiss').addEventListener('click', async () => {
