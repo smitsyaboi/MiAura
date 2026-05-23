@@ -862,3 +862,128 @@ button:hover {
         rgba(200, 200, 200, 0.6),
         rgba(180, 180, 180, 0.5));
 }
+
+/* Disabled nav arrow state */
+.year-arrow:disabled {
+    opacity: 0.25;
+    cursor: default;
+    pointer-events: none;
+    transform: none;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Settings review section */
+.settings-review-section {
+    text-align: center;
+    padding: 14px 20px;
+    margin: 8px 20px 20px;
+}
+
+.settings-review-prompt {
+    font-size: 12px;
+    color: rgba(26, 58, 74, 0.6);
+    margin: 0 0 8px;
+}
+
+.settings-review-link {
+    display: inline-block;
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a3a4a;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: var(--border-radius-pill);
+    padding: 7px 16px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transition: background var(--transition-fast);
+}
+
+.settings-review-link:hover {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+/* Founding member badge */
+.founding-badge {
+    font-family: var(--font-family);
+    font-size: 11px;
+    font-weight: 600;
+    color: #2d5a3d;
+    background: linear-gradient(135deg, rgba(100, 220, 160, 0.3), rgba(80, 200, 140, 0.2));
+    border: 1px solid rgba(100, 220, 160, 0.5);
+    border-radius: var(--border-radius-pill);
+    padding: 3px 10px;
+    display: inline-block;
+    margin: -6px 0 10px 20px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Welcome banner */
+.welcome-banner {
+    position: absolute;
+    bottom: 64px;
+    left: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4));
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    z-index: 110;
+    transform: translateY(12px);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+}
+
+.welcome-banner.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.welcome-banner .review-dismiss {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+}
+
+.welcome-title {
+    font-family: var(--font-family);
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a3a4a;
+    line-height: 1.4;
+    margin: 0 20px 4px 0;
+}
+
+.welcome-body {
+    font-family: var(--font-family);
+    font-size: 11px;
+    color: rgba(26, 58, 74, 0.7);
+    margin: 0 0 10px;
+    line-height: 1.4;
+}
+
+.welcome-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.welcome-hello-link {
+    font-family: var(--font-family);
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(26, 58, 74, 0.65);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.welcome-hello-link:hover {
+    color: #1a3a4a;
+}

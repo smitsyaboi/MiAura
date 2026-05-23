@@ -74,10 +74,9 @@ function buildWaveSVG(points, width, height, labels) {
     const fillGradId = 'fillGrad' + Math.random().toString(36).slice(2, 8);
 
     const todayPoint = points.find(p => p.isToday);
-    const segments = buildSegments(points);
+    const loggedPoints = points.filter(p => p.isLogged);
 
     // Build line gradient stops from all logged points
-    const loggedPoints = points.filter(p => p.isLogged);
     let lineGradStops = '';
     if (loggedPoints.length > 0) {
         const minX = points[0].x;
@@ -94,27 +93,22 @@ function buildWaveSVG(points, width, height, labels) {
     gridLines += `<line x1="0" y1="160" x2="${width}" y2="160" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
     gridLines += `<line x1="0" y1="80" x2="${width}" y2="80" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
 
-    // Render each segment separately
+    // Single continuous path — unlogged days sit at BASELINE_Y, creating visible dips
     let segmentPaths = '';
-    segments.forEach(segment => {
-        if (segment.length === 0) return;
-
-        // Fill area
-        segmentPaths += `<path d="${filledPath(segment, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.5"/>`;
-
-        // Wave line (only if 2+ points)
-        if (segment.length >= 2) {
-            segmentPaths += `<path d="${smoothPath(segment)}" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+    if (loggedPoints.length > 0) {
+        segmentPaths += `<path d="${filledPath(points, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.5"/>`;
+        if (points.length >= 2) {
+            segmentPaths += `<path d="${smoothPath(points)}" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
         }
+    }
 
-        // Dots on each point
-        segment.forEach(point => {
-            const color = WAVE_COLORS[point.level] || WAVE_COLORS[3];
-            if (point.isToday) {
-                segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
-            }
-            segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="3.5" fill="${color}" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>`;
-        });
+    // Dots only on logged days
+    loggedPoints.forEach(point => {
+        const color = WAVE_COLORS[point.level] || WAVE_COLORS[3];
+        if (point.isToday) {
+            segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
+        }
+        segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="3.5" fill="${color}" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>`;
     });
 
     // Today marker
@@ -191,8 +185,6 @@ function renderYearGrid(moods, language) {
         labels += `<text x="${labelX}" y="253" text-anchor="middle" font-size="8" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.45)">${monthLabels[m]}</text>`;
     }
 
-    // Build segmented SVG for year view
-    const segments = buildSegments(points);
     const loggedPts = points.filter(p => p.isLogged);
     const todayPt = points.find(p => p.isToday);
 
@@ -212,15 +204,14 @@ function renderYearGrid(moods, language) {
     gridLines += `<line x1="0" y1="160" x2="296" y2="160" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
     gridLines += `<line x1="0" y1="80" x2="296" y2="80" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
 
-    // Render each segment
+    // Single continuous path — unlogged days sit at BASELINE_Y, creating visible dips
     let segmentPaths = '';
-    segments.forEach(segment => {
-        if (segment.length === 0) return;
-        segmentPaths += `<path d="${filledPath(segment, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.5"/>`;
-        if (segment.length >= 2) {
-            segmentPaths += `<path d="${smoothPath(segment)}" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+    if (loggedPts.length > 0) {
+        segmentPaths += `<path d="${filledPath(points, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.5"/>`;
+        if (points.length >= 2) {
+            segmentPaths += `<path d="${smoothPath(points)}" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
         }
-    });
+    }
 
     // Today marker and dot (year view shows today dot)
     let todayMarker = '';

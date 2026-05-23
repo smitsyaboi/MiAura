@@ -1,19 +1,24 @@
-import { calculateStreak, getReviewMeta, markReviewPromptShown, markReviewed } from './storage.js';
+import { calculateStreak, getReviewMeta, markReviewPromptShown, markReviewed, markReviewPrompt2Shown } from './storage.js';
 import { getCachedLanguage, t } from './localization.js';
 
-const STORE_URL = 'https://chromewebstore.google.com/detail/miaura/apiimplkhebjnaajodfcnhlncpjdioip';
+export const STORE_URL = 'https://chromewebstore.google.com/detail/miaura/apiimplkhebjnaajodfcnhlncpjdioip';
 
 export async function maybeShowReviewPrompt() {
     const streak = await calculateStreak();
-    if (streak < 7) return;
-
     const meta = await getReviewMeta();
-    if (meta.reviewPromptShown || meta.hasReviewed) return;
 
-    showBanner();
+    if (!meta.hasReviewed) {
+        if (!meta.reviewPromptShown && streak >= 3) {
+            showBanner('reviewPrompt', markReviewPromptShown);
+            return;
+        }
+        if (meta.reviewPromptShown && !meta.reviewPrompt2Shown && streak >= 7) {
+            showBanner('reviewPrompt2', markReviewPrompt2Shown);
+        }
+    }
 }
 
-function showBanner() {
+function showBanner(textKey, onDismiss) {
     const lang = getCachedLanguage();
     const existing = document.getElementById('reviewBanner');
     if (existing) return;
@@ -22,14 +27,13 @@ function showBanner() {
     banner.id = 'reviewBanner';
     banner.className = 'review-banner';
     banner.innerHTML = `
-        <span class="review-text">${t('reviewPrompt', lang)}</span>
+        <span class="review-text">${t(textKey, lang)}</span>
         <a class="review-link" id="reviewLink" href="${STORE_URL}" target="_blank">${t('reviewAction', lang)}</a>
-        <button class="review-dismiss" id="reviewDismiss">\u00d7</button>
+        <button class="review-dismiss" id="reviewDismiss">×</button>
     `;
 
     document.querySelector('.container').appendChild(banner);
 
-    // Trigger animation after insert
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             banner.classList.add('visible');
@@ -37,14 +41,13 @@ function showBanner() {
     });
 
     document.getElementById('reviewLink').addEventListener('click', async () => {
-        await markReviewPromptShown();
+        await onDismiss();
         await markReviewed();
         hideBanner();
-        chrome.tabs.create({ url: STORE_URL });
     });
 
     document.getElementById('reviewDismiss').addEventListener('click', async () => {
-        await markReviewPromptShown();
+        await onDismiss();
         hideBanner();
     });
 }

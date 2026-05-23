@@ -3,7 +3,7 @@
  * A daily mood tracking Chrome extension with Frutiger Aero aesthetic
  */
 
-import { migrateIfNeeded, loadData, setSetting, saveMoodForDate, setTestStreak, clearTestStreak } from './js/storage.js';
+import { migrateIfNeeded, loadData, setSetting, saveMoodForDate, setTestStreak, clearTestStreak, markReviewed } from './js/storage.js';
 import { MOOD_THEMES } from './js/themes.js';
 import { getTodayDateString } from './js/dateUtils.js';
 import {
@@ -12,11 +12,12 @@ import {
     getCachedLanguage,
     t
 } from './js/localization.js';
-import { resetViewYear } from './js/state.js';
+import { resetViewYear, setMinViewYear } from './js/state.js';
 import { loadYearGrid } from './js/gridRenderer.js';
-import { setupAllEventListeners, setupMoodSelection, showPage } from './js/eventHandlers.js';
+import { setupAllEventListeners, setupMoodSelection, showPage, syncNavButtonStates } from './js/eventHandlers.js';
 import { initNavigation } from './js/navigation.js';
 import { maybeShowReviewPrompt } from './js/reviewPrompt.js';
+import { maybeShowWelcomeBanner } from './js/welcomeBanner.js';
 
 /** Currently selected mood level (null if none) */
 let selectedLevel = null;
@@ -90,6 +91,8 @@ async function updateLanguage(data) {
     document.getElementById('testModeLabel').textContent = t('testMode', lang);
     document.getElementById('exportLabel').textContent = t('dataExport', lang);
     document.getElementById('exportComingSoon').textContent = t('comingSoon', lang);
+    document.getElementById('lovingAppLabel').textContent = t('lovingApp', lang);
+    document.getElementById('settingsReviewLink').textContent = t('leaveReview', lang);
 
     // Update language select value
     document.getElementById('languageSelect').value = lang;
@@ -227,6 +230,13 @@ async function init() {
 
     resetViewYear();
 
+    // Compute the earliest year in data to bound the calendar navigator
+    const moodDates = Object.keys(data.moods);
+    if (moodDates.length > 0) {
+        const earliestYear = Math.min(...moodDates.map(d => parseInt(d.slice(0, 4))));
+        setMinViewYear(earliestYear);
+    }
+
     // Set mood orb backgrounds from MOOD_THEMES
     document.querySelectorAll('.mood-orb').forEach(orb => {
         const level = parseInt(orb.dataset.level);
@@ -278,9 +288,38 @@ async function init() {
     setupCounterModeButtons();
     await setupViewToggle();
     setupTestControls();
+    setupSettingsReviewLink();
     await loadYearGrid(data);
+    syncNavButtonStates(data.settings.calendarView);
     initNavigation();
+    await updateFoundingBadge();
+    await maybeShowWelcomeBanner();
     await maybeShowReviewPrompt();
+}
+
+/**
+ * Sets up the "Leave a review" link in the Settings page
+ */
+function setupSettingsReviewLink() {
+    const link = document.getElementById('settingsReviewLink');
+    if (link) {
+        link.addEventListener('click', async () => {
+            await markReviewed();
+        });
+    }
+}
+
+/**
+ * Shows or hides the Founding Member badge based on stored meta
+ */
+async function updateFoundingBadge() {
+    const data = await loadData();
+    const badge = document.getElementById('foundingBadge');
+    if (badge && data.meta?.isFoundingMember) {
+        const lang = getCachedLanguage();
+        badge.textContent = t('foundingMember', lang);
+        badge.style.display = 'inline-block';
+    }
 }
 
 // Start the application when DOM is ready

@@ -38,8 +38,16 @@ export const translations = {
         fantastic: 'Fantastic',
         okay: 'Okay',
         down: 'Down',
-        reviewPrompt: 'Loving MiAura? You\'re on a 7-day streak ✦',
-        reviewAction: 'Leave a review'
+        reviewPrompt: 'Loving MiAura? You\'re on a 3-day streak ✦',
+        reviewPrompt2: 'Still loving MiAura? You\'re on a 7-day streak ✦',
+        reviewAction: 'Leave a review',
+        leaveReview: 'Leave a review ✦',
+        lovingApp: 'Loving MiAura?',
+        welcomeTitle: 'Thank you for being one of our first 100 users ✦',
+        welcomeBody: 'Your early support means everything to us.',
+        welcomeReview: 'Leave a review',
+        welcomeSayHello: 'Say hello →',
+        foundingMember: 'Founding Member ✦'
     },
     fr: {
         title: 'Bonjour, comment allez-vous aujourd\'hui?',
@@ -60,8 +68,16 @@ export const translations = {
         fantastic: 'Fantastique',
         okay: 'Correct',
         down: 'Abattu',
-        reviewPrompt: 'Vous aimez MiAura? 7 jours de suite ✦',
-        reviewAction: 'Laisser un avis'
+        reviewPrompt: 'Vous aimez MiAura? 3 jours de suite ✦',
+        reviewPrompt2: 'Toujours fan de MiAura? 7 jours de suite ✦',
+        reviewAction: 'Laisser un avis',
+        leaveReview: 'Laisser un avis ✦',
+        lovingApp: 'Vous aimez MiAura?',
+        welcomeTitle: 'Merci d\'être parmi nos 100 premiers utilisateurs ✦',
+        welcomeBody: 'Votre soutien précoce compte énormément.',
+        welcomeReview: 'Laisser un avis',
+        welcomeSayHello: 'Dire bonjour →',
+        foundingMember: 'Membre Fondateur ✦'
     },
     pt: {
         title: 'Ola, como voce esta se sentindo hoje?',
@@ -82,8 +98,16 @@ export const translations = {
         fantastic: 'Fantastico',
         okay: 'Ok',
         down: 'Deprimido',
-        reviewPrompt: 'Gostando do MiAura? 7 dias seguidos ✦',
-        reviewAction: 'Avaliar'
+        reviewPrompt: 'Gostando do MiAura? 3 dias seguidos ✦',
+        reviewPrompt2: 'Ainda curtindo o MiAura? 7 dias seguidos ✦',
+        reviewAction: 'Avaliar',
+        leaveReview: 'Avaliar ✦',
+        lovingApp: 'Gostando do MiAura?',
+        welcomeTitle: 'Obrigado por ser um dos nossos primeiros 100 usuários ✦',
+        welcomeBody: 'Seu apoio inicial significa muito para nós.',
+        welcomeReview: 'Avaliar',
+        welcomeSayHello: 'Dizer olá →',
+        foundingMember: 'Membro Fundador ✦'
     },
     de: {
         title: 'Hallo, wie fühlst du dich heute?',
@@ -104,8 +128,16 @@ export const translations = {
         fantastic: 'Fantastisch',
         okay: 'Okay',
         down: 'Niedergeschlagen',
-        reviewPrompt: 'MiAura gefällt dir? 7 Tage in Folge ✦',
-        reviewAction: 'Bewertung schreiben'
+        reviewPrompt: 'MiAura gefällt dir? 3 Tage in Folge ✦',
+        reviewPrompt2: 'Immer noch dabei? 7 Tage in Folge ✦',
+        reviewAction: 'Bewertung schreiben',
+        leaveReview: 'Bewertung schreiben ✦',
+        lovingApp: 'MiAura gefällt dir?',
+        welcomeTitle: 'Danke, dass du einer unserer ersten 100 Nutzer bist ✦',
+        welcomeBody: 'Deine frühe Unterstützung bedeutet uns sehr viel.',
+        welcomeReview: 'Bewertung schreiben',
+        welcomeSayHello: 'Hallo sagen →',
+        foundingMember: 'Gründungsmitglied ✦'
     },
     sv: {
         title: 'Hej, hur mår du idag?',
@@ -126,8 +158,16 @@ export const translations = {
         fantastic: 'Fantastisk',
         okay: 'Okej',
         down: 'Nedstämd',
-        reviewPrompt: 'Gillar du MiAura? 7 dagar i rad ✦',
-        reviewAction: 'Skriv en recension'
+        reviewPrompt: 'Gillar du MiAura? 3 dagar i rad ✦',
+        reviewPrompt2: 'Gillar du MiAura fortfarande? 7 dagar i rad ✦',
+        reviewAction: 'Skriv en recension',
+        leaveReview: 'Skriv en recension ✦',
+        lovingApp: 'Gillar du MiAura?',
+        welcomeTitle: 'Tack för att du är en av våra första 100 användare ✦',
+        welcomeBody: 'Ditt tidiga stöd betyder allt för oss.',
+        welcomeReview: 'Skriv en recension',
+        welcomeSayHello: 'Säg hej →',
+        foundingMember: 'Grundande Medlem ✦'
     }
 };
 

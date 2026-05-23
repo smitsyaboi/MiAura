@@ -55,10 +55,17 @@ describe('storage', () => {
     describe('loadData / saveData', () => {
         it('should return default data when nothing stored', async () => {
             const data = await loadData();
-            expect(data).toEqual({
+            expect(data).toMatchObject({
                 version: 2,
                 settings: { language: 'en', counterMode: 'streak', calendarView: 'year' },
-                moods: {}
+                moods: {},
+                meta: expect.objectContaining({
+                    hasReviewed: false,
+                    reviewPromptShown: false,
+                    reviewPrompt2Shown: false,
+                    seenV11Banner: true,
+                    isFoundingMember: false
+                })
             });
         });
 
