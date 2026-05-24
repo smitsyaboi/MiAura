@@ -89,8 +89,6 @@ async function updateLanguage(data) {
     document.getElementById('streakTitle').textContent = t('streak', lang);
     document.getElementById('totalTitle').textContent = t('total', lang);
     document.getElementById('testModeLabel').textContent = t('testMode', lang);
-    document.getElementById('exportLabel').textContent = t('dataExport', lang);
-    document.getElementById('exportComingSoon').textContent = t('comingSoon', lang);
     document.getElementById('lovingAppLabel').textContent = t('lovingApp', lang);
     document.getElementById('settingsReviewLink').textContent = t('leaveReview', lang);
 
