@@ -44,8 +44,12 @@ function showWelcomeBanner() {
         hideWelcomeBanner();
     });
 
-    document.getElementById('welcomeReviewLink').addEventListener('click', async () => {
-        await markReviewed();
+    document.getElementById('welcomeReviewLink').addEventListener('click', () => {
+        hideWelcomeBanner();
+        markReviewed();
+    });
+
+    banner.querySelector('.welcome-hello-link').addEventListener('click', () => {
         hideWelcomeBanner();
     });
 }
