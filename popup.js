@@ -329,7 +329,7 @@ async function updateFoundingBadge() {
         const badge = document.getElementById('foundingBadge');
         const row = document.getElementById('foundingBadgeRow');
         if (badge) badge.textContent = t('foundingMember', lang);
-        if (row) row.style.display = '';
+        if (row) row.style.display = 'flex';
     }
 }
 
