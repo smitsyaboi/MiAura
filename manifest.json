@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "MiAura",
-    "version": "1.1",
+    "version": "1.1.4",
     "description": "Track your daily mood with a Frutiger Aero style tracker",
     "action": {
       "default_popup": "popup.html",
