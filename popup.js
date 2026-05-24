@@ -324,11 +324,12 @@ function setupSettingsReviewLink() {
  */
 async function updateFoundingBadge() {
     const data = await loadData();
-    const badge = document.getElementById('foundingBadge');
-    if (badge && data.meta?.isFoundingMember) {
+    if (data.meta?.isFoundingMember) {
         const lang = getCachedLanguage();
-        badge.textContent = t('foundingMember', lang);
-        badge.style.display = 'inline-block';
+        const badge = document.getElementById('foundingBadge');
+        const row = document.getElementById('foundingBadgeRow');
+        if (badge) badge.textContent = t('foundingMember', lang);
+        if (row) row.style.display = '';
     }
 }
 
