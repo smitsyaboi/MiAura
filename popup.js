@@ -3,7 +3,7 @@
  * A daily mood tracking Chrome extension with Frutiger Aero aesthetic
  */
 
-import { migrateIfNeeded, loadData, setSetting, saveMoodForDate, setTestStreak, clearTestStreak, markReviewed } from './js/storage.js';
+import { migrateIfNeeded, loadData, saveData, setSetting, saveMoodForDate, setTestStreak, clearTestStreak, markReviewed } from './js/storage.js';
 import { MOOD_THEMES } from './js/themes.js';
 import { getTodayDateString } from './js/dateUtils.js';
 import {
@@ -214,6 +214,18 @@ function setupTestControls() {
         clearBtn.addEventListener('click', async () => {
             await clearTestStreak();
             await loadYearGrid();
+        });
+    }
+
+    const resetBannerBtn = document.getElementById('resetWelcomeBanner');
+    if (resetBannerBtn) {
+        resetBannerBtn.addEventListener('click', async () => {
+            const data = await loadData();
+            if (!data.meta) data.meta = {};
+            data.meta.seenV11Banner = false;
+            data.meta.isFoundingMember = false;
+            await saveData(data);
+            await maybeShowWelcomeBanner();
         });
     }
 }
