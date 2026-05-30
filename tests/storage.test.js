@@ -11,7 +11,13 @@ import {
     calculateStreakFromMoods,
     getStreakHeatLevel,
     setTestStreak,
-    clearTestStreak
+    clearTestStreak,
+    markReviewPromptShown,
+    markReviewPrompt2Shown,
+    markReviewed,
+    markV11BannerSeen,
+    markFoundingMember,
+    getReviewMeta
 } from '../js/storage.js';
 
 // Mock chrome.storage.local
@@ -55,10 +61,17 @@ describe('storage', () => {
     describe('loadData / saveData', () => {
         it('should return default data when nothing stored', async () => {
             const data = await loadData();
-            expect(data).toEqual({
+            expect(data).toMatchObject({
                 version: 2,
                 settings: { language: 'en', counterMode: 'streak', calendarView: 'year' },
-                moods: {}
+                moods: {},
+                meta: expect.objectContaining({
+                    hasReviewed: false,
+                    reviewPromptShown: false,
+                    reviewPrompt2Shown: false,
+                    seenV11Banner: true,
+                    isFoundingMember: false
+                })
             });
         });
 
@@ -265,14 +278,60 @@ describe('storage', () => {
         });
     });
 
+    describe('meta mutation functions', () => {
+        it('markReviewPromptShown sets reviewPromptShown to true', async () => {
+            await markReviewPromptShown();
+            const meta = await getReviewMeta();
+            expect(meta.reviewPromptShown).toBe(true);
+        });
+
+        it('markReviewPrompt2Shown sets reviewPrompt2Shown to true', async () => {
+            await markReviewPrompt2Shown();
+            const meta = await getReviewMeta();
+            expect(meta.reviewPrompt2Shown).toBe(true);
+        });
+
+        it('markReviewed sets hasReviewed to true', async () => {
+            await markReviewed();
+            const meta = await getReviewMeta();
+            expect(meta.hasReviewed).toBe(true);
+        });
+
+        it('markV11BannerSeen sets seenV11Banner to true', async () => {
+            const data = await loadData();
+            data.meta.seenV11Banner = false;
+            await saveData(data);
+            await markV11BannerSeen();
+            const meta = await getReviewMeta();
+            expect(meta.seenV11Banner).toBe(true);
+        });
+
+        it('markFoundingMember sets isFoundingMember to true', async () => {
+            await markFoundingMember();
+            const meta = await getReviewMeta();
+            expect(meta.isFoundingMember).toBe(true);
+        });
+
+        it('meta flags are independent of each other', async () => {
+            await markReviewPromptShown();
+            await markFoundingMember();
+            const meta = await getReviewMeta();
+            expect(meta.reviewPromptShown).toBe(true);
+            expect(meta.isFoundingMember).toBe(true);
+            expect(meta.reviewPrompt2Shown).toBe(false);
+            expect(meta.hasReviewed).toBe(false);
+        });
+    });
+
     describe('setTestStreak / clearTestStreak', () => {
-        it('should create test entries with level 1 and isTest flag', async () => {
+        it('should create test entries with random levels and isTest flag', async () => {
             await setTestStreak(3);
             const data = await loadData();
             const entries = Object.values(data.moods);
             expect(entries.length).toBe(3);
             entries.forEach(entry => {
-                expect(entry.level).toBe(1);
+                expect(entry.level).toBeGreaterThanOrEqual(1);
+                expect(entry.level).toBeLessThanOrEqual(5);
                 expect(entry.isTest).toBe(true);
             });
         });

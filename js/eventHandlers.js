@@ -3,7 +3,13 @@
  */
 
 import { getSetting } from './storage.js';
-import { incrementViewYear, decrementViewYear, incrementViewMonth, decrementViewMonth, incrementViewWeek, decrementViewWeek } from './state.js';
+import {
+    incrementViewYear, decrementViewYear,
+    incrementViewMonth, decrementViewMonth,
+    incrementViewWeek, decrementViewWeek,
+    getViewYear, getActualYear, getMinViewYear,
+    getViewMonth, getViewWeekStart, getWeekStart
+} from './state.js';
 import { loadYearGrid } from './gridRenderer.js';
 
 /**
@@ -32,6 +38,33 @@ export function showPage(pageId) {
 }
 
 /**
+ * Updates the disabled state of the prev/next navigation buttons based on current view and bounds
+ * @param {string} calendarView - 'year' | 'month' | 'week'
+ */
+export function syncNavButtonStates(calendarView) {
+    const prevBtn = document.getElementById('prevYear');
+    const nextBtn = document.getElementById('nextYear');
+    if (!prevBtn || !nextBtn) return;
+
+    const currentYear = getActualYear();
+    const now = new Date();
+
+    if (calendarView === 'month') {
+        prevBtn.disabled = getViewYear() <= getMinViewYear() && getViewMonth() === 0;
+        nextBtn.disabled = getViewYear() > currentYear ||
+            (getViewYear() === currentYear && getViewMonth() >= now.getMonth());
+    } else if (calendarView === 'week') {
+        const weekStart = getViewWeekStart();
+        const currentWeek = getWeekStart(now);
+        prevBtn.disabled = weekStart < new Date(getMinViewYear(), 0, 1);
+        nextBtn.disabled = weekStart >= currentWeek;
+    } else {
+        prevBtn.disabled = getViewYear() <= getMinViewYear();
+        nextBtn.disabled = getViewYear() >= currentYear;
+    }
+}
+
+/**
  * Sets up calendar navigation buttons (handles year/month/week based on view)
  */
 export function setupYearNavigation() {
@@ -42,12 +75,17 @@ export function setupYearNavigation() {
         prevBtn.addEventListener('click', async () => {
             const view = await getSetting('calendarView');
             if (view === 'month') {
+                if (getViewYear() <= getMinViewYear() && getViewMonth() === 0) return;
                 decrementViewMonth();
             } else if (view === 'week') {
+                const weekStart = getViewWeekStart();
+                if (weekStart < new Date(getMinViewYear(), 0, 1)) return;
                 decrementViewWeek();
             } else {
+                if (getViewYear() <= getMinViewYear()) return;
                 decrementViewYear();
             }
+            syncNavButtonStates(view);
             await loadYearGrid();
         });
     }
@@ -55,13 +93,23 @@ export function setupYearNavigation() {
     if (nextBtn) {
         nextBtn.addEventListener('click', async () => {
             const view = await getSetting('calendarView');
+            const currentYear = getActualYear();
+            const now = new Date();
+
             if (view === 'month') {
+                if (getViewYear() > currentYear ||
+                    (getViewYear() === currentYear && getViewMonth() >= now.getMonth())) return;
                 incrementViewMonth();
             } else if (view === 'week') {
+                const weekStart = getViewWeekStart();
+                const currentWeek = getWeekStart(now);
+                if (weekStart >= currentWeek) return;
                 incrementViewWeek();
             } else {
+                if (getViewYear() >= currentYear) return;
                 incrementViewYear();
             }
+            syncNavButtonStates(view);
             await loadYearGrid();
         });
     }

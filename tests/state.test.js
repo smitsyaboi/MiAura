@@ -16,7 +16,9 @@ import {
     incrementViewWeek,
     decrementViewWeek,
     resetAllViews,
-    getWeekStart
+    getWeekStart,
+    getMinViewYear,
+    setMinViewYear
 } from '../js/state.js';
 
 describe('state', () => {
@@ -189,6 +191,23 @@ describe('state', () => {
             const monday = getWeekStart(saturday);
             expect(monday.getMonth()).toBe(0); // January
             expect(monday.getDate()).toBe(27); // Jan 27
+        });
+    });
+
+    describe('minViewYear', () => {
+        it('should default to the current year', () => {
+            expect(getMinViewYear()).toBe(new Date().getFullYear());
+        });
+
+        it('should set and get minViewYear', () => {
+            setMinViewYear(2022);
+            expect(getMinViewYear()).toBe(2022);
+        });
+
+        it('should not be affected by resetAllViews', () => {
+            setMinViewYear(2021);
+            resetAllViews();
+            expect(getMinViewYear()).toBe(2021);
         });
     });
 

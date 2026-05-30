@@ -12,7 +12,8 @@ const state = {
     currentYear: getCurrentYear(),
     viewYear: getCurrentYear(),
     viewMonth: new Date().getMonth(),
-    viewWeekStart: getWeekStart(new Date())
+    viewWeekStart: getWeekStart(new Date()),
+    minViewYear: getCurrentYear()
 };
 
 /**
@@ -162,6 +163,22 @@ export function resetAllViews() {
     state.viewYear = state.currentYear;
     state.viewMonth = now.getMonth();
     state.viewWeekStart = getWeekStart(now);
+}
+
+/**
+ * Gets the minimum year the calendar can scroll back to (based on earliest data)
+ * @returns {number}
+ */
+export function getMinViewYear() {
+    return state.minViewYear;
+}
+
+/**
+ * Sets the minimum year the calendar can scroll back to
+ * @param {number} year
+ */
+export function setMinViewYear(year) {
+    state.minViewYear = year;
 }
 
 // Need to expose getWeekStart for external use

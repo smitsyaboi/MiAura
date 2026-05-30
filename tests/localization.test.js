@@ -68,10 +68,10 @@ describe('localization', () => {
             expect(setSetting).toHaveBeenCalledWith('language', 'pt');
         });
 
-        it('should cycle from pt to en', async () => {
+        it('should cycle from pt to de', async () => {
             initLanguageCache('pt');
             await cycleLanguage();
-            expect(setSetting).toHaveBeenCalledWith('language', 'en');
+            expect(setSetting).toHaveBeenCalledWith('language', 'de');
         });
     });
 

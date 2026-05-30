@@ -3,7 +3,7 @@
  * A daily mood tracking Chrome extension with Frutiger Aero aesthetic
  */
 
-import { migrateIfNeeded, loadData, setSetting, saveMoodForDate, setTestStreak, clearTestStreak } from './js/storage.js';
+import { migrateIfNeeded, loadData, saveData, setSetting, saveMoodForDate, setTestStreak, clearTestStreak, markReviewed } from './js/storage.js';
 import { MOOD_THEMES } from './js/themes.js';
 import { getTodayDateString } from './js/dateUtils.js';
 import {
@@ -12,11 +12,12 @@ import {
     getCachedLanguage,
     t
 } from './js/localization.js';
-import { resetViewYear } from './js/state.js';
+import { resetViewYear, setMinViewYear, setViewYear, setViewMonth } from './js/state.js';
 import { loadYearGrid } from './js/gridRenderer.js';
-import { setupAllEventListeners, setupMoodSelection, showPage } from './js/eventHandlers.js';
+import { setupAllEventListeners, setupMoodSelection, showPage, syncNavButtonStates } from './js/eventHandlers.js';
 import { initNavigation } from './js/navigation.js';
-import { maybeShowReviewPrompt } from './js/reviewPrompt.js';
+import { maybeShowReviewPrompt, STORE_URL } from './js/reviewPrompt.js';
+import { maybeShowWelcomeBanner } from './js/welcomeBanner.js';
 
 /** Currently selected mood level (null if none) */
 let selectedLevel = null;
@@ -88,8 +89,10 @@ async function updateLanguage(data) {
     document.getElementById('streakTitle').textContent = t('streak', lang);
     document.getElementById('totalTitle').textContent = t('total', lang);
     document.getElementById('testModeLabel').textContent = t('testMode', lang);
-    document.getElementById('exportLabel').textContent = t('dataExport', lang);
-    document.getElementById('exportComingSoon').textContent = t('comingSoon', lang);
+    document.getElementById('lovingAppLabel').textContent = t('lovingApp', lang);
+    document.getElementById('settingsReviewLink').textContent = t('leaveReview', lang);
+    const badge = document.getElementById('foundingBadge');
+    if (badge && badge.textContent) badge.textContent = t('foundingMember', lang);
 
     // Update language select value
     document.getElementById('languageSelect').value = lang;
@@ -154,6 +157,7 @@ async function setupViewToggle() {
                 b.classList.toggle('active', b.dataset.view === view);
             });
             await loadYearGrid();
+            syncNavButtonStates(view);
         });
     });
 
@@ -213,6 +217,18 @@ function setupTestControls() {
             await loadYearGrid();
         });
     }
+
+    const resetBannerBtn = document.getElementById('resetWelcomeBanner');
+    if (resetBannerBtn) {
+        resetBannerBtn.addEventListener('click', async () => {
+            const data = await loadData();
+            if (!data.meta) data.meta = {};
+            data.meta.seenV11Banner = false;
+            data.meta.isFoundingMember = false;
+            await saveData(data);
+            await maybeShowWelcomeBanner();
+        });
+    }
 }
 
 /**
@@ -222,10 +238,28 @@ async function init() {
     await migrateIfNeeded();
     const data = await loadData();
 
+    document.addEventListener('miaura:yearMonthClick', async ({ detail: { year, month } }) => {
+        setViewYear(year);
+        setViewMonth(month);
+        await setSetting('calendarView', 'month');
+        document.querySelectorAll('[data-view]').forEach(b => {
+            b.classList.toggle('active', b.dataset.view === 'month');
+        });
+        await loadYearGrid();
+        syncNavButtonStates('month');
+    });
+
     // Seed the language cache so sync helpers work immediately
     initLanguageCache(data.settings.language);
 
     resetViewYear();
+
+    // Compute the earliest year in data to bound the calendar navigator
+    const moodDates = Object.keys(data.moods);
+    if (moodDates.length > 0) {
+        const earliestYear = Math.min(...moodDates.map(d => parseInt(d.slice(0, 4))));
+        setMinViewYear(earliestYear);
+    }
 
     // Set mood orb backgrounds from MOOD_THEMES
     document.querySelectorAll('.mood-orb').forEach(orb => {
@@ -278,9 +312,40 @@ async function init() {
     setupCounterModeButtons();
     await setupViewToggle();
     setupTestControls();
+    setupSettingsReviewLink();
     await loadYearGrid(data);
+    syncNavButtonStates(data.settings.calendarView);
     initNavigation();
+    await updateFoundingBadge();
+    await maybeShowWelcomeBanner();
     await maybeShowReviewPrompt();
+}
+
+/**
+ * Sets up the "Leave a review" link in the Settings page
+ */
+function setupSettingsReviewLink() {
+    const link = document.getElementById('settingsReviewLink');
+    if (link) {
+        link.href = STORE_URL;
+        link.addEventListener('click', async () => {
+            await markReviewed();
+        });
+    }
+}
+
+/**
+ * Shows or hides the Founding Member badge based on stored meta
+ */
+async function updateFoundingBadge() {
+    const data = await loadData();
+    if (data.meta?.isFoundingMember) {
+        const lang = getCachedLanguage();
+        const badge = document.getElementById('foundingBadge');
+        const row = document.getElementById('foundingBadgeRow');
+        if (badge) badge.textContent = t('foundingMember', lang);
+        if (row) row.style.display = 'flex';
+    }
 }
 
 // Start the application when DOM is ready

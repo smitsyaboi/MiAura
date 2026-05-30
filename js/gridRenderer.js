@@ -47,6 +47,18 @@ function filledPath(points, baselineY) {
     return `${linePath} L${points[points.length - 1].x} ${baselineY} L${points[0].x} ${baselineY} Z`;
 }
 
+function animateWavePaths(grid) {
+    grid.querySelectorAll('.wave-path').forEach((path, i) => {
+        const length = path.getTotalLength();
+        path.style.strokeDasharray = length;
+        path.style.strokeDashoffset = length;
+        requestAnimationFrame(() => {
+            path.style.transition = `stroke-dashoffset 0.65s cubic-bezier(0.4, 0, 0.2, 1) ${i * 0.08}s`;
+            path.style.strokeDashoffset = '0';
+        });
+    });
+}
+
 function buildSegments(points) {
     const segments = [];
     let currentSegment = [];
@@ -74,10 +86,9 @@ function buildWaveSVG(points, width, height, labels) {
     const fillGradId = 'fillGrad' + Math.random().toString(36).slice(2, 8);
 
     const todayPoint = points.find(p => p.isToday);
-    const segments = buildSegments(points);
+    const loggedPoints = points.filter(p => p.isLogged);
 
     // Build line gradient stops from all logged points
-    const loggedPoints = points.filter(p => p.isLogged);
     let lineGradStops = '';
     if (loggedPoints.length > 0) {
         const minX = points[0].x;
@@ -94,27 +105,26 @@ function buildWaveSVG(points, width, height, labels) {
     gridLines += `<line x1="0" y1="160" x2="${width}" y2="160" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
     gridLines += `<line x1="0" y1="80" x2="${width}" y2="80" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
 
-    // Render each segment separately
+    const segments = buildSegments(points);
+
     let segmentPaths = '';
     segments.forEach(segment => {
-        if (segment.length === 0) return;
-
-        // Fill area
-        segmentPaths += `<path d="${filledPath(segment, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.5"/>`;
-
-        // Wave line (only if 2+ points)
         if (segment.length >= 2) {
-            segmentPaths += `<path d="${smoothPath(segment)}" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+            segmentPaths += `<path d="${filledPath(segment, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.4"/>`;
+            segmentPaths += `<path d="${smoothPath(segment)}" class="wave-path" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
         }
+    });
+    if (loggedPoints.length >= 2) {
+        segmentPaths += `<path d="${smoothPath(loggedPoints)}" stroke="rgba(26,58,74,0.22)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>`;
+    }
 
-        // Dots on each point
-        segment.forEach(point => {
-            const color = WAVE_COLORS[point.level] || WAVE_COLORS[3];
-            if (point.isToday) {
-                segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
-            }
-            segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="3.5" fill="${color}" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>`;
-        });
+    // Dots only on logged days
+    loggedPoints.forEach(point => {
+        const color = WAVE_COLORS[point.level] || WAVE_COLORS[3];
+        if (point.isToday) {
+            segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
+        }
+        segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="3.5" class="mood-dot" fill="${color}" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>`;
     });
 
     // Today marker
@@ -174,12 +184,13 @@ function renderYearGrid(moods, language) {
         }
     });
 
-    // Month divider ticks and labels
+    // Month divider ticks, labels, and click hit areas
     const monthLabels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+    const startOfYear = new Date(viewYear, 0, 1);
+    const now = new Date();
     let labels = '';
     for (let m = 0; m < 12; m++) {
         const dayOfYear = new Date(viewYear, m, 1);
-        const startOfYear = new Date(viewYear, 0, 1);
         const dayIdx = Math.floor((dayOfYear - startOfYear) / 86400000);
         const x = (dayIdx / (yearDates.length - 1)) * 296;
         if (m > 0) {
@@ -189,10 +200,17 @@ function renderYearGrid(moods, language) {
             ? x + ((new Date(viewYear, m + 1, 1) - dayOfYear) / 86400000 / (yearDates.length - 1) * 296) / 2
             : x + ((yearDates.length - 1 - dayIdx) / (yearDates.length - 1) * 296) / 2;
         labels += `<text x="${labelX}" y="253" text-anchor="middle" font-size="8" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.45)">${monthLabels[m]}</text>`;
+
+        if (viewYear < currentYear || m <= now.getMonth()) {
+            const endIdx = Math.min(
+                Math.floor((new Date(viewYear, m + 1, 0) - startOfYear) / 86400000),
+                yearDates.length - 1
+            );
+            const x2 = (endIdx / (yearDates.length - 1)) * 296;
+            labels += `<rect x="${x.toFixed(1)}" y="0" width="${(x2 - x).toFixed(1)}" height="${BASELINE_Y}" fill="transparent" class="month-hit" data-month="${m}" data-year="${viewYear}"/>`;
+        }
     }
 
-    // Build segmented SVG for year view
-    const segments = buildSegments(points);
     const loggedPts = points.filter(p => p.isLogged);
     const todayPt = points.find(p => p.isToday);
 
@@ -212,15 +230,18 @@ function renderYearGrid(moods, language) {
     gridLines += `<line x1="0" y1="160" x2="296" y2="160" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
     gridLines += `<line x1="0" y1="80" x2="296" y2="80" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
 
-    // Render each segment
+    const segments = buildSegments(points);
+
     let segmentPaths = '';
     segments.forEach(segment => {
-        if (segment.length === 0) return;
-        segmentPaths += `<path d="${filledPath(segment, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.5"/>`;
         if (segment.length >= 2) {
-            segmentPaths += `<path d="${smoothPath(segment)}" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+            segmentPaths += `<path d="${filledPath(segment, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.4"/>`;
+            segmentPaths += `<path d="${smoothPath(segment)}" class="wave-path" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
         }
     });
+    if (loggedPts.length >= 2) {
+        segmentPaths += `<path d="${smoothPath(loggedPts)}" stroke="rgba(26,58,74,0.22)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>`;
+    }
 
     // Today marker and dot (year view shows today dot)
     let todayMarker = '';
@@ -232,7 +253,7 @@ function renderYearGrid(moods, language) {
         if (todayPt.isLogged) {
             const color = WAVE_COLORS[todayPt.level] || WAVE_COLORS[3];
             todayDot = `<circle cx="${todayPt.x}" cy="${todayPt.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
-            todayDot += `<circle cx="${todayPt.x}" cy="${todayPt.y}" r="3.5" fill="${color}" stroke="white" stroke-width="1.5"/>`;
+            todayDot += `<circle cx="${todayPt.x}" cy="${todayPt.y}" r="3.5" class="mood-dot" fill="${color}" stroke="white" stroke-width="1.5"/>`;
         }
     }
 
@@ -483,4 +504,20 @@ export async function loadYearGrid(data = null) {
     }
 
     updateDisplayHeader(loggedCount, data);
+
+    if (grid) {
+        animateWavePaths(grid);
+        if (calendarView === 'year') {
+            grid.querySelectorAll('.month-hit').forEach(rect => {
+                rect.addEventListener('click', () => {
+                    document.dispatchEvent(new CustomEvent('miaura:yearMonthClick', {
+                        detail: {
+                            year: parseInt(rect.dataset.year),
+                            month: parseInt(rect.dataset.month)
+                        }
+                    }));
+                });
+            });
+        }
+    }
 }

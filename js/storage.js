@@ -67,7 +67,10 @@ export async function migrateIfNeeded() {
             installDate: new Date().toISOString(),
             totalOpens: 0,
             hasReviewed: false,
-            reviewPromptShown: false
+            reviewPromptShown: false,
+            reviewPrompt2Shown: false,
+            seenV11Banner: true,
+            isFoundingMember: false
         }
     };
     await chrome.storage.local.set({ [STORAGE_KEY]: newData });
@@ -103,7 +106,15 @@ export async function loadData() {
         version: 2,
         settings: { language: 'en', counterMode: 'streak', calendarView: 'year' },
         moods: {},
-        meta: { installDate: new Date().toISOString(), totalOpens: 0, hasReviewed: false, reviewPromptShown: false }
+        meta: {
+            installDate: new Date().toISOString(),
+            totalOpens: 0,
+            hasReviewed: false,
+            reviewPromptShown: false,
+            reviewPrompt2Shown: false,
+            seenV11Banner: true,
+            isFoundingMember: false
+        }
     };
 }
 
@@ -229,7 +240,7 @@ export async function setTestStreak(days) {
 
         if (!data.moods[dateString]) {
             data.moods[dateString] = {
-                level: 1,
+                level: Math.ceil(Math.random() * 5),
                 timestamp: date.toISOString(),
                 isTest: true
             };
@@ -280,5 +291,35 @@ export async function markReviewed() {
     const data = await loadData();
     if (!data.meta) data.meta = {};
     data.meta.hasReviewed = true;
+    await saveData(data);
+}
+
+/**
+ * Marks the second review prompt as shown
+ */
+export async function markReviewPrompt2Shown() {
+    const data = await loadData();
+    if (!data.meta) data.meta = {};
+    data.meta.reviewPrompt2Shown = true;
+    await saveData(data);
+}
+
+/**
+ * Marks the v1.1 welcome banner as seen
+ */
+export async function markV11BannerSeen() {
+    const data = await loadData();
+    if (!data.meta) data.meta = {};
+    data.meta.seenV11Banner = true;
+    await saveData(data);
+}
+
+/**
+ * Marks the user as a founding member
+ */
+export async function markFoundingMember() {
+    const data = await loadData();
+    if (!data.meta) data.meta = {};
+    data.meta.isFoundingMember = true;
     await saveData(data);
 }
