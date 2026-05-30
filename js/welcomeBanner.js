@@ -8,10 +8,9 @@ export async function maybeShowWelcomeBanner() {
     const meta = await getReviewMeta();
     if (meta.seenV11Banner) return;
 
+    showWelcomeBanner();
     await markV11BannerSeen();
     await markFoundingMember();
-
-    showWelcomeBanner();
 }
 
 function showWelcomeBanner() {
@@ -44,9 +43,11 @@ function showWelcomeBanner() {
         hideWelcomeBanner();
     });
 
-    document.getElementById('welcomeReviewLink').addEventListener('click', () => {
+    document.getElementById('welcomeReviewLink').addEventListener('click', async (e) => {
+        e.preventDefault();
         hideWelcomeBanner();
-        markReviewed();
+        await markReviewed();
+        window.open(STORE_URL, '_blank');
     });
 
     banner.querySelector('.welcome-hello-link').addEventListener('click', () => {

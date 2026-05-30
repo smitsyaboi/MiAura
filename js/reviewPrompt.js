@@ -40,14 +40,16 @@ function showBanner(textKey, onDismiss) {
         });
     });
 
-    document.getElementById('reviewLink').addEventListener('click', async () => {
+    document.getElementById('reviewLink').addEventListener('click', async (e) => {
+        e.preventDefault();
+        hideBanner();
         await onDismiss();
         await markReviewed();
-        hideBanner();
+        window.open(STORE_URL, '_blank');
     });
 
-    document.getElementById('reviewDismiss').addEventListener('click', async () => {
-        await onDismiss();
+    document.getElementById('reviewDismiss').addEventListener('click', () => {
+        onDismiss();
         hideBanner();
     });
 }

@@ -12,11 +12,11 @@ import {
     getCachedLanguage,
     t
 } from './js/localization.js';
-import { resetViewYear, setMinViewYear } from './js/state.js';
+import { resetViewYear, setMinViewYear, setViewYear, setViewMonth } from './js/state.js';
 import { loadYearGrid } from './js/gridRenderer.js';
 import { setupAllEventListeners, setupMoodSelection, showPage, syncNavButtonStates } from './js/eventHandlers.js';
 import { initNavigation } from './js/navigation.js';
-import { maybeShowReviewPrompt } from './js/reviewPrompt.js';
+import { maybeShowReviewPrompt, STORE_URL } from './js/reviewPrompt.js';
 import { maybeShowWelcomeBanner } from './js/welcomeBanner.js';
 
 /** Currently selected mood level (null if none) */
@@ -91,6 +91,8 @@ async function updateLanguage(data) {
     document.getElementById('testModeLabel').textContent = t('testMode', lang);
     document.getElementById('lovingAppLabel').textContent = t('lovingApp', lang);
     document.getElementById('settingsReviewLink').textContent = t('leaveReview', lang);
+    const badge = document.getElementById('foundingBadge');
+    if (badge && badge.textContent) badge.textContent = t('foundingMember', lang);
 
     // Update language select value
     document.getElementById('languageSelect').value = lang;
@@ -155,6 +157,7 @@ async function setupViewToggle() {
                 b.classList.toggle('active', b.dataset.view === view);
             });
             await loadYearGrid();
+            syncNavButtonStates(view);
         });
     });
 
@@ -235,6 +238,17 @@ async function init() {
     await migrateIfNeeded();
     const data = await loadData();
 
+    document.addEventListener('miaura:yearMonthClick', async ({ detail: { year, month } }) => {
+        setViewYear(year);
+        setViewMonth(month);
+        await setSetting('calendarView', 'month');
+        document.querySelectorAll('[data-view]').forEach(b => {
+            b.classList.toggle('active', b.dataset.view === 'month');
+        });
+        await loadYearGrid();
+        syncNavButtonStates('month');
+    });
+
     // Seed the language cache so sync helpers work immediately
     initLanguageCache(data.settings.language);
 
@@ -313,6 +327,7 @@ async function init() {
 function setupSettingsReviewLink() {
     const link = document.getElementById('settingsReviewLink');
     if (link) {
+        link.href = STORE_URL;
         link.addEventListener('click', async () => {
             await markReviewed();
         });

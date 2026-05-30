@@ -240,7 +240,7 @@ export async function setTestStreak(days) {
 
         if (!data.moods[dateString]) {
             data.moods[dateString] = {
-                level: 1,
+                level: Math.ceil(Math.random() * 5),
                 timestamp: date.toISOString(),
                 isTest: true
             };
