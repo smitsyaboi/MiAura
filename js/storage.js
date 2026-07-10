@@ -9,6 +9,13 @@ import { formatDateString } from './dateUtils.js';
 
 const STORAGE_KEY = 'miAura_v2';
 
+/** Review prompt schedule: first ask after this many logged days */
+export const REVIEW_FIRST_ASK_AT = 5;
+/** After a dismissal, re-arm the prompt this many logged days later */
+export const REVIEW_REARM_DAYS = 10;
+/** Lifetime cap on review asks */
+export const REVIEW_MAX_ASKS = 3;
+
 /**
  * Color-to-level map used only during migration from the old localStorage schema
  */
@@ -67,8 +74,8 @@ export async function migrateIfNeeded() {
             installDate: new Date().toISOString(),
             totalOpens: 0,
             hasReviewed: false,
-            reviewPromptShown: false,
-            reviewPrompt2Shown: false,
+            reviewAskCount: 0,
+            reviewNextAskAt: REVIEW_FIRST_ASK_AT,
             seenV11Banner: true,
             isFoundingMember: false
         }
@@ -110,8 +117,8 @@ export async function loadData() {
             installDate: new Date().toISOString(),
             totalOpens: 0,
             hasReviewed: false,
-            reviewPromptShown: false,
-            reviewPrompt2Shown: false,
+            reviewAskCount: 0,
+            reviewNextAskAt: REVIEW_FIRST_ASK_AT,
             seenV11Banner: true,
             isFoundingMember: false
         }
@@ -275,16 +282,6 @@ export async function getReviewMeta() {
 }
 
 /**
- * Marks the review prompt as shown (prevents future display)
- */
-export async function markReviewPromptShown() {
-    const data = await loadData();
-    if (!data.meta) data.meta = {};
-    data.meta.reviewPromptShown = true;
-    await saveData(data);
-}
-
-/**
  * Marks that the user has reviewed (clicked the review link)
  */
 export async function markReviewed() {
@@ -295,12 +292,56 @@ export async function markReviewed() {
 }
 
 /**
- * Marks the second review prompt as shown
+ * Counts genuinely logged days (excludes test-mode entries)
+ * @param {Object} moods - The moods map
+ * @returns {number}
  */
-export async function markReviewPrompt2Shown() {
+export function countLoggedDaysFromMoods(moods) {
+    return Object.values(moods).filter(m => !m.isTest).length;
+}
+
+/**
+ * Returns the review prompt schedule, lazily upgrading users from the old
+ * streak-based system. Users whose prompts were burned under the old rules
+ * (reviewPromptShown / reviewPrompt2Shown) are re-armed for one more ask,
+ * 10 logged days from now.
+ * @returns {Promise<{loggedDays: number, askCount: number, nextAskAt: number, hasReviewed: boolean}>}
+ */
+export async function getReviewSchedule() {
     const data = await loadData();
     if (!data.meta) data.meta = {};
-    data.meta.reviewPrompt2Shown = true;
+    const meta = data.meta;
+    const loggedDays = countLoggedDaysFromMoods(data.moods);
+
+    if (meta.reviewNextAskAt === undefined) {
+        const burnedUnderOldRules = meta.reviewPromptShown || meta.reviewPrompt2Shown;
+        if (burnedUnderOldRules) {
+            meta.reviewAskCount = REVIEW_MAX_ASKS - 1;
+            meta.reviewNextAskAt = loggedDays + REVIEW_REARM_DAYS;
+        } else {
+            meta.reviewAskCount = 0;
+            meta.reviewNextAskAt = REVIEW_FIRST_ASK_AT;
+        }
+        await saveData(data);
+    }
+
+    return {
+        loggedDays,
+        askCount: meta.reviewAskCount || 0,
+        nextAskAt: meta.reviewNextAskAt,
+        hasReviewed: !!meta.hasReviewed
+    };
+}
+
+/**
+ * Records a review prompt dismissal: counts the ask and re-arms the
+ * next one for 10 logged days later
+ */
+export async function recordReviewDismissal() {
+    const data = await loadData();
+    if (!data.meta) data.meta = {};
+    data.meta.reviewAskCount = (data.meta.reviewAskCount || 0) + 1;
+    data.meta.reviewNextAskAt = countLoggedDaysFromMoods(data.moods) + REVIEW_REARM_DAYS;
     await saveData(data);
 }
 

@@ -301,9 +301,10 @@ async function init() {
             const today = getTodayDateString();
             await saveMoodForDate(today, level);
 
-            // Navigate to calendar after short delay
-            setTimeout(() => {
+            // Navigate to calendar after short delay, then maybe ask for a review
+            setTimeout(async () => {
                 showPage('page2');
+                await maybeShowReviewPrompt();
             }, 400);
         }
     );
@@ -318,7 +319,6 @@ async function init() {
     initNavigation();
     await updateFoundingBadge();
     await maybeShowWelcomeBanner();
-    await maybeShowReviewPrompt();
 }
 
 /**

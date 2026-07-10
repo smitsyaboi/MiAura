@@ -12,12 +12,16 @@ import {
     getStreakHeatLevel,
     setTestStreak,
     clearTestStreak,
-    markReviewPromptShown,
-    markReviewPrompt2Shown,
     markReviewed,
     markV11BannerSeen,
     markFoundingMember,
-    getReviewMeta
+    getReviewMeta,
+    countLoggedDaysFromMoods,
+    getReviewSchedule,
+    recordReviewDismissal,
+    REVIEW_FIRST_ASK_AT,
+    REVIEW_REARM_DAYS,
+    REVIEW_MAX_ASKS
 } from '../js/storage.js';
 
 // Mock chrome.storage.local
@@ -67,8 +71,8 @@ describe('storage', () => {
                 moods: {},
                 meta: expect.objectContaining({
                     hasReviewed: false,
-                    reviewPromptShown: false,
-                    reviewPrompt2Shown: false,
+                    reviewAskCount: 0,
+                    reviewNextAskAt: REVIEW_FIRST_ASK_AT,
                     seenV11Banner: true,
                     isFoundingMember: false
                 })
@@ -279,18 +283,6 @@ describe('storage', () => {
     });
 
     describe('meta mutation functions', () => {
-        it('markReviewPromptShown sets reviewPromptShown to true', async () => {
-            await markReviewPromptShown();
-            const meta = await getReviewMeta();
-            expect(meta.reviewPromptShown).toBe(true);
-        });
-
-        it('markReviewPrompt2Shown sets reviewPrompt2Shown to true', async () => {
-            await markReviewPrompt2Shown();
-            const meta = await getReviewMeta();
-            expect(meta.reviewPrompt2Shown).toBe(true);
-        });
-
         it('markReviewed sets hasReviewed to true', async () => {
             await markReviewed();
             const meta = await getReviewMeta();
@@ -313,13 +305,88 @@ describe('storage', () => {
         });
 
         it('meta flags are independent of each other', async () => {
-            await markReviewPromptShown();
             await markFoundingMember();
             const meta = await getReviewMeta();
-            expect(meta.reviewPromptShown).toBe(true);
             expect(meta.isFoundingMember).toBe(true);
-            expect(meta.reviewPrompt2Shown).toBe(false);
             expect(meta.hasReviewed).toBe(false);
+        });
+    });
+
+    describe('review schedule', () => {
+        it('countLoggedDaysFromMoods excludes test entries', () => {
+            const moods = {
+                '2026-03-01': { level: 1, timestamp: 't' },
+                '2026-03-02': { level: 2, timestamp: 't', isTest: true },
+                '2026-03-03': { level: 3, timestamp: 't' }
+            };
+            expect(countLoggedDaysFromMoods(moods)).toBe(2);
+        });
+
+        it('fresh users start with askCount 0 and first ask threshold', async () => {
+            const schedule = await getReviewSchedule();
+            expect(schedule.askCount).toBe(0);
+            expect(schedule.nextAskAt).toBe(REVIEW_FIRST_ASK_AT);
+            expect(schedule.hasReviewed).toBe(false);
+        });
+
+        it('reports logged days excluding test entries', async () => {
+            await saveMoodForDate('2026-03-01', 3);
+            await saveMoodForDate('2026-03-02', 4);
+            await setTestStreak(3);
+            const schedule = await getReviewSchedule();
+            expect(schedule.loggedDays).toBe(2);
+        });
+
+        it('re-arms users burned under the old streak rules for one final ask', async () => {
+            const data = await loadData();
+            data.moods = {
+                '2026-03-01': { level: 1, timestamp: 't' },
+                '2026-03-02': { level: 1, timestamp: 't' }
+            };
+            data.meta.reviewPromptShown = true;
+            data.meta.reviewPrompt2Shown = true;
+            delete data.meta.reviewAskCount;
+            delete data.meta.reviewNextAskAt;
+            await saveData(data);
+
+            const schedule = await getReviewSchedule();
+            expect(schedule.askCount).toBe(REVIEW_MAX_ASKS - 1);
+            expect(schedule.nextAskAt).toBe(2 + REVIEW_REARM_DAYS);
+        });
+
+        it('does not re-arm legacy users who were never prompted', async () => {
+            const data = await loadData();
+            data.meta.reviewPromptShown = false;
+            delete data.meta.reviewAskCount;
+            delete data.meta.reviewNextAskAt;
+            await saveData(data);
+
+            const schedule = await getReviewSchedule();
+            expect(schedule.askCount).toBe(0);
+            expect(schedule.nextAskAt).toBe(REVIEW_FIRST_ASK_AT);
+        });
+
+        it('persists the lazily upgraded schedule', async () => {
+            const data = await loadData();
+            data.meta.reviewPromptShown = true;
+            delete data.meta.reviewAskCount;
+            delete data.meta.reviewNextAskAt;
+            await saveData(data);
+
+            await getReviewSchedule();
+            const meta = await getReviewMeta();
+            expect(meta.reviewAskCount).toBe(REVIEW_MAX_ASKS - 1);
+            expect(meta.reviewNextAskAt).toBeDefined();
+        });
+
+        it('recordReviewDismissal increments askCount and re-arms from current logged days', async () => {
+            await saveMoodForDate('2026-03-01', 3);
+            await saveMoodForDate('2026-03-02', 3);
+            await saveMoodForDate('2026-03-03', 3);
+            await recordReviewDismissal();
+            const schedule = await getReviewSchedule();
+            expect(schedule.askCount).toBe(1);
+            expect(schedule.nextAskAt).toBe(3 + REVIEW_REARM_DAYS);
         });
     });
 

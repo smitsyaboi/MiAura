@@ -88,5 +88,5 @@ Found a bug or have a suggestion? Please include:
 
 ---
 
-**Version:** 1.3.1  
+**Version:** 1.4.0  
 **License:** MIT

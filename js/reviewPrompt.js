@@ -1,24 +1,19 @@
-import { calculateStreak, getReviewMeta, markReviewPromptShown, markReviewed, markReviewPrompt2Shown } from './storage.js';
+import { getReviewSchedule, recordReviewDismissal, markReviewed, REVIEW_MAX_ASKS } from './storage.js';
 import { getCachedLanguage, t } from './localization.js';
 
 export const STORE_URL = 'https://chromewebstore.google.com/detail/miaura/apiimplkhebjnaajodfcnhlncpjdioip';
 
 export async function maybeShowReviewPrompt() {
-    const streak = await calculateStreak();
-    const meta = await getReviewMeta();
+    const { loggedDays, askCount, nextAskAt, hasReviewed } = await getReviewSchedule();
 
-    if (!meta.hasReviewed) {
-        if (!meta.reviewPromptShown && streak >= 3) {
-            showBanner('reviewPrompt', markReviewPromptShown);
-            return;
-        }
-        if (meta.reviewPromptShown && !meta.reviewPrompt2Shown && streak >= 7) {
-            showBanner('reviewPrompt2', markReviewPrompt2Shown);
-        }
-    }
+    if (hasReviewed) return;
+    if (askCount >= REVIEW_MAX_ASKS) return;
+    if (loggedDays < nextAskAt) return;
+
+    showBanner(askCount === 0 ? 'reviewPrompt' : 'reviewPrompt2', loggedDays);
 }
 
-function showBanner(textKey, onDismiss) {
+function showBanner(textKey, loggedDays) {
     const lang = getCachedLanguage();
     const existing = document.getElementById('reviewBanner');
     if (existing) return;
@@ -27,7 +22,7 @@ function showBanner(textKey, onDismiss) {
     banner.id = 'reviewBanner';
     banner.className = 'review-banner';
     banner.innerHTML = `
-        <span class="review-text">${t(textKey, lang)}</span>
+        <span class="review-text">${t(textKey, lang).replace('{days}', loggedDays)}</span>
         <a class="review-link" id="reviewLink" href="${STORE_URL}" target="_blank">${t('reviewAction', lang)}</a>
         <button class="review-dismiss" id="reviewDismiss">×</button>
     `;
@@ -43,13 +38,12 @@ function showBanner(textKey, onDismiss) {
     document.getElementById('reviewLink').addEventListener('click', async (e) => {
         e.preventDefault();
         hideBanner();
-        await onDismiss();
         await markReviewed();
         window.open(STORE_URL, '_blank');
     });
 
     document.getElementById('reviewDismiss').addEventListener('click', () => {
-        onDismiss();
+        recordReviewDismissal();
         hideBanner();
     });
 }
