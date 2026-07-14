@@ -14,8 +14,9 @@ MiAura does not collect, transmit, or store any personal information or user dat
 
 ## Permissions
 
-MiAura requests only one permission:
+MiAura requests two permissions:
 - **Storage**: Required to save your mood entries locally in your browser
+- **Alarms**: Used only to schedule a local midnight recomputation of the toolbar's daily-log reminder badge (a small dot reminding you to log today's mood). This runs entirely on-device — it does not access the network, and no data is sent anywhere.
 
 ## Third-Party Services
 
