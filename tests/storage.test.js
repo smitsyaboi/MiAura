@@ -21,20 +21,23 @@ import {
     recordReviewDismissal,
     REVIEW_FIRST_ASK_AT,
     REVIEW_REARM_DAYS,
-    REVIEW_MAX_ASKS
+    REVIEW_MAX_ASKS,
+    BACKUP_KEY
 } from '../js/storage.js';
 
-// Mock chrome.storage.local
+// Mock chrome.storage.local. Values are deep-cloned on get/set to match the
+// real API, which structured-clones (no shared references with callers).
 let chromeStore = {};
+const clone = (v) => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
 const chromeStorageMock = {
     get: vi.fn((key) => {
         if (typeof key === 'string') {
-            return Promise.resolve({ [key]: chromeStore[key] || undefined });
+            return Promise.resolve({ [key]: clone(chromeStore[key]) });
         }
         return Promise.resolve({});
     }),
     set: vi.fn((obj) => {
-        Object.assign(chromeStore, obj);
+        Object.assign(chromeStore, clone(obj));
         return Promise.resolve();
     }),
     remove: vi.fn((key) => {
@@ -419,4 +422,115 @@ describe('storage', () => {
             expect(afterClear.moods['2020-01-01']).toBeDefined();
         });
     });
+
+    describe('saveData validation guard', () => {
+        function validData(moods = {}) {
+            return {
+                version: 2,
+                settings: { language: 'en', counterMode: 'streak', calendarView: 'year' },
+                moods,
+                meta: {}
+            };
+        }
+
+        it('rejects a structurally invalid object and leaves storage untouched', async () => {
+            await saveMoodForDate('2026-07-01', 3);
+            const before = JSON.stringify(chromeStore['miAura_v2']);
+
+            await expect(saveData(null)).rejects.toThrow(/validation/);
+            await expect(saveData({ version: 1, settings: {}, moods: {} })).rejects.toThrow(/validation/);
+            await expect(saveData(validData({ '2026-07-01': { level: 9, timestamp: 'x' } }))).rejects.toThrow(/validation/);
+            await expect(saveData(validData({ '2026-07-01': null }))).rejects.toThrow(/validation/);
+
+            expect(JSON.stringify(chromeStore['miAura_v2'])).toBe(before);
+        });
+
+        it('rejects a write that would drop more than one real logged day', async () => {
+            for (let d = 1; d <= 5; d++) {
+                await saveMoodForDate(`2026-07-0${d}`, 3);
+            }
+            const truncated = validData({ '2026-07-01': { level: 3, timestamp: 'x' } });
+
+            await expect(saveData(truncated)).rejects.toThrow(/drop 4 logged days/);
+            expect(Object.keys(chromeStore['miAura_v2'].moods).length).toBe(5);
+        });
+
+        it('allows removing a single real day', async () => {
+            await saveMoodForDate('2026-07-01', 3);
+            await saveMoodForDate('2026-07-02', 4);
+            const data = await loadData();
+            delete data.moods['2026-07-02'];
+            await expect(saveData(data)).resolves.toBeUndefined();
+        });
+
+        it('still allows clearTestStreak to remove many test entries', async () => {
+            await saveMoodForDate('2026-07-01', 3);
+            await setTestStreak(30);
+            await clearTestStreak();
+            const data = await loadData();
+            expect(Object.keys(data.moods)).toEqual(['2026-07-01']);
+        });
+    });
+
+    describe('rolling daily backup', () => {
+        it('snapshots the previous state on the first save of the day', async () => {
+            await saveMoodForDate('2026-07-01', 3);
+            // First write had no prior data, so no backup yet — second write snapshots
+            const afterFirst = JSON.parse(JSON.stringify(chromeStore['miAura_v2']));
+            await saveMoodForDate('2026-07-02', 4);
+
+            const backup = chromeStore[BACKUP_KEY];
+            expect(backup).toBeDefined();
+            expect(backup.data).toEqual(afterFirst);
+        });
+
+        it('does not overwrite the backup on later saves the same day', async () => {
+            await saveMoodForDate('2026-07-01', 3);
+            await saveMoodForDate('2026-07-02', 4);
+            const firstBackup = JSON.stringify(chromeStore[BACKUP_KEY]);
+
+            await saveMoodForDate('2026-07-03', 5);
+            expect(JSON.stringify(chromeStore[BACKUP_KEY])).toBe(firstBackup);
+        });
+
+        it('loadData restores from backup when the primary key is missing', async () => {
+            await saveMoodForDate('2026-07-01', 3);
+            await saveMoodForDate('2026-07-02', 4);
+            const backupData = chromeStore[BACKUP_KEY].data;
+
+            delete chromeStore['miAura_v2'];
+            const data = await loadData();
+
+            expect(data).toEqual(backupData);
+            expect(chromeStore['miAura_v2']).toEqual(backupData);
+        });
+
+        it('loadData quarantines a corrupt primary and restores the backup', async () => {
+            await saveMoodForDate('2026-07-01', 3);
+            await saveMoodForDate('2026-07-02', 4);
+            const backupData = chromeStore[BACKUP_KEY].data;
+
+            const corrupt = { version: 2, settings: {}, moods: 'not-an-object' };
+            chromeStore['miAura_v2'] = corrupt;
+            const data = await loadData();
+
+            expect(data).toEqual(backupData);
+            expect(chromeStore['miAura_v2_corrupt']).toEqual(corrupt);
+        });
+
+        it('migrateIfNeeded restores from backup instead of re-migrating localStorage', async () => {
+            await saveMoodForDate('2026-07-01', 3);
+            await saveMoodForDate('2026-07-02', 4);
+            const backupData = chromeStore[BACKUP_KEY].data;
+            delete chromeStore['miAura_v2'];
+
+            // Stale legacy data that a fresh migration would (wrongly) prefer
+            localStorage.setItem('moodTracker', JSON.stringify({}));
+            await migrateIfNeeded();
+
+            expect(chromeStore['miAura_v2']).toEqual(backupData);
+            expect(localStorage.getItem('moodTracker')).not.toBeNull();
+        });
+    });
+
 });

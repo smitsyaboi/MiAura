@@ -2,12 +2,19 @@
  * Storage module - handles all chrome.storage.local operations for mood data
  *
  * Schema (miAura_v2):
- *   { version: 2, settings: { language, counterMode, calendarView }, moods: { "YYYY-MM-DD": { level, timestamp } } }
+ *   { version: 2, settings: { language, counterMode, calendarView }, moods: { "YYYY-MM-DD": { level, timestamp, isTest? } } }
+ *
+ * Data safety: saveData() validates the object and refuses writes that would
+ * drop real logged days; the first save of each day snapshots the previous
+ * state to miAura_v2_backup, which loadData()/migrateIfNeeded() restore from
+ * if the primary key is ever missing or corrupt.
  */
 
 import { formatDateString } from './dateUtils.js';
 
 const STORAGE_KEY = 'miAura_v2';
+export const BACKUP_KEY = 'miAura_v2_backup';
+const QUARANTINE_KEY = 'miAura_v2_corrupt';
 
 /** Review prompt schedule: first ask after this many logged days */
 export const REVIEW_FIRST_ASK_AT = 5;
@@ -33,6 +40,22 @@ const COLOR_TO_LEVEL = {
 };
 
 /**
+ * Structural validity check for a miAura_v2 data object.
+ * @param {*} data - Candidate data object
+ * @returns {boolean}
+ */
+function isValidData(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+    if (data.version !== 2) return false;
+    if (!data.settings || typeof data.settings !== 'object') return false;
+    if (!data.moods || typeof data.moods !== 'object' || Array.isArray(data.moods)) return false;
+    return Object.values(data.moods).every(entry =>
+        entry && typeof entry === 'object' &&
+        Number.isInteger(entry.level) && entry.level >= 1 && entry.level <= 5
+    );
+}
+
+/**
  * Migrates old localStorage data to chrome.storage.local if needed.
  * Non-destructive: old data is only removed after verification.
  */
@@ -40,6 +63,15 @@ export async function migrateIfNeeded() {
     // Step 1 — already migrated?
     const result = await chrome.storage.local.get(STORAGE_KEY);
     if (result[STORAGE_KEY]) return;
+
+    // Step 2 — primary key gone but a backup snapshot exists: restore it
+    // instead of minting a fresh (empty) store from localStorage
+    const backupResult = await chrome.storage.local.get(BACKUP_KEY);
+    const backup = backupResult[BACKUP_KEY];
+    if (backup && isValidData(backup.data)) {
+        await chrome.storage.local.set({ [STORAGE_KEY]: backup.data });
+        return;
+    }
 
     // Read old mood data
     const oldRaw = localStorage.getItem('moodTracker');
@@ -104,12 +136,27 @@ export async function migrateIfNeeded() {
 }
 
 /**
- * Loads the full data object from chrome.storage.local
+ * Loads the full data object from chrome.storage.local.
+ * If the primary key is missing or corrupt, restores the daily backup
+ * (quarantining the corrupt object rather than discarding it).
  * @returns {Promise<Object>} - The miAura_v2 data object
  */
 export async function loadData() {
     const result = await chrome.storage.local.get(STORAGE_KEY);
-    return result[STORAGE_KEY] || {
+    const stored = result[STORAGE_KEY];
+    if (stored && isValidData(stored)) return stored;
+
+    const backupResult = await chrome.storage.local.get(BACKUP_KEY);
+    const backup = backupResult[BACKUP_KEY];
+    if (backup && isValidData(backup.data)) {
+        if (stored) {
+            await chrome.storage.local.set({ [QUARANTINE_KEY]: stored });
+        }
+        await chrome.storage.local.set({ [STORAGE_KEY]: backup.data });
+        return backup.data;
+    }
+
+    return stored || {
         version: 2,
         settings: { language: 'en', counterMode: 'streak', calendarView: 'year' },
         moods: {},
@@ -126,10 +173,40 @@ export async function loadData() {
 }
 
 /**
- * Saves the full data object to chrome.storage.local
+ * Saves the full data object to chrome.storage.local.
+ * Guarded: throws (leaving stored data untouched) if the object is
+ * structurally invalid or would drop more than one real logged day.
+ * The first save of each calendar day snapshots the previous state to
+ * BACKUP_KEY before writing.
  * @param {Object} data - The miAura_v2 data object
  */
 export async function saveData(data) {
+    if (!isValidData(data)) {
+        throw new Error('saveData refused: data failed validation, stored data untouched');
+    }
+
+    const result = await chrome.storage.local.get(STORAGE_KEY);
+    const current = result[STORAGE_KEY];
+
+    if (current && isValidData(current)) {
+        // No operation legitimately removes more than one real (non-test)
+        // logged day in a single save
+        const currentReal = countLoggedDaysFromMoods(current.moods);
+        const nextReal = countLoggedDaysFromMoods(data.moods);
+        if (nextReal < currentReal - 1) {
+            throw new Error(
+                `saveData refused: write would drop ${currentReal - nextReal} logged days (${currentReal} -> ${nextReal}), stored data untouched`
+            );
+        }
+
+        const today = formatDateString(new Date());
+        const backupResult = await chrome.storage.local.get(BACKUP_KEY);
+        const backup = backupResult[BACKUP_KEY];
+        if (!backup || backup.savedAt !== today) {
+            await chrome.storage.local.set({ [BACKUP_KEY]: { savedAt: today, data: current } });
+        }
+    }
+
     await chrome.storage.local.set({ [STORAGE_KEY]: data });
 }
 
