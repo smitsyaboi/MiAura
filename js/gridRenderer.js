@@ -25,15 +25,49 @@ const WAVE_COLORS = {
     5: 'rgba(150, 155, 210, 0.85)',
 };
 
+// Maps a (possibly fractional, e.g. weekly-averaged) level to a y coordinate
+function levelToY(level) {
+    const lo = Math.min(5, Math.max(1, Math.floor(level)));
+    const hi = Math.min(5, Math.max(1, Math.ceil(level)));
+    return LEVEL_TO_Y[lo] + (LEVEL_TO_Y[hi] - LEVEL_TO_Y[lo]) * (level - lo);
+}
+
+// Monotone cubic interpolation (no overshoot, no flat plateaus at each point)
 function smoothPath(points) {
-    if (points.length === 0) return '';
-    if (points.length === 1) return `M${points[0].x} ${points[0].y}`;
+    const n = points.length;
+    if (n === 0) return '';
+    if (n === 1) return `M${points[0].x} ${points[0].y}`;
     let d = `M${points[0].x} ${points[0].y}`;
-    for (let i = 1; i < points.length; i++) {
-        const prev = points[i - 1];
-        const curr = points[i];
-        const cpx = (prev.x + curr.x) / 2;
-        d += ` C${cpx} ${prev.y} ${cpx} ${curr.y} ${curr.x} ${curr.y}`;
+    if (n === 2) {
+        return d + ` L${points[1].x} ${points[1].y}`;
+    }
+
+    const dx = [];
+    const slope = [];
+    for (let i = 0; i < n - 1; i++) {
+        dx[i] = points[i + 1].x - points[i].x;
+        slope[i] = (points[i + 1].y - points[i].y) / dx[i];
+    }
+
+    const m = [slope[0]];
+    for (let i = 1; i < n - 1; i++) {
+        if (slope[i - 1] * slope[i] <= 0) {
+            m[i] = 0;
+        } else {
+            const w1 = 2 * dx[i] + dx[i - 1];
+            const w2 = dx[i] + 2 * dx[i - 1];
+            m[i] = (w1 + w2) / (w1 / slope[i - 1] + w2 / slope[i]);
+        }
+    }
+    m[n - 1] = slope[n - 2];
+
+    for (let i = 0; i < n - 1; i++) {
+        const h = dx[i];
+        const cp1x = (points[i].x + h / 3).toFixed(2);
+        const cp1y = (points[i].y + m[i] * h / 3).toFixed(2);
+        const cp2x = (points[i + 1].x - h / 3).toFixed(2);
+        const cp2y = (points[i + 1].y - m[i + 1] * h / 3).toFixed(2);
+        d += ` C${cp1x} ${cp1y} ${cp2x} ${cp2y} ${points[i + 1].x} ${points[i + 1].y}`;
     }
     return d;
 }
@@ -47,14 +81,47 @@ function filledPath(points, baselineY) {
     return `${linePath} L${points[points.length - 1].x} ${baselineY} L${points[0].x} ${baselineY} Z`;
 }
 
+// Animates the graph as one continuous left-to-right pass: solid segments
+// draw in, dashed gap connectors and dots fade in when the "pen" reaches them.
 function animateWavePaths(grid) {
-    grid.querySelectorAll('.wave-path').forEach((path, i) => {
-        const length = path.getTotalLength();
-        path.style.strokeDasharray = length;
-        path.style.strokeDashoffset = length;
+    const strokes = [...grid.querySelectorAll('[data-ax1]')];
+    if (strokes.length === 0) return;
+
+    const xs = strokes.flatMap(el => [parseFloat(el.dataset.ax1), parseFloat(el.dataset.ax2)]);
+    const minX = Math.min(...xs);
+    const span = (Math.max(...xs) - minX) || 1;
+    const TOTAL = 0.9;
+    const timeAt = x => ((x - minX) / span) * TOTAL;
+
+    strokes.forEach(el => {
+        const delay = timeAt(parseFloat(el.dataset.ax1));
+        const dur = Math.max(0.15, timeAt(parseFloat(el.dataset.ax2)) - delay);
+        if (el.classList.contains('wave-path') && typeof el.getTotalLength === 'function') {
+            const length = el.getTotalLength();
+            el.style.strokeDasharray = length;
+            el.style.strokeDashoffset = length;
+            requestAnimationFrame(() => {
+                el.style.transition = `stroke-dashoffset ${dur.toFixed(2)}s linear ${delay.toFixed(2)}s`;
+                el.style.strokeDashoffset = '0';
+            });
+        } else {
+            // Dashed connectors and area fills fade in (a dashoffset draw would
+            // destroy the dash pattern)
+            el.style.opacity = '0';
+            requestAnimationFrame(() => {
+                el.style.transition = `opacity ${dur.toFixed(2)}s ease ${delay.toFixed(2)}s`;
+                el.style.opacity = '1';
+            });
+        }
+    });
+
+    grid.querySelectorAll('.mood-dot, .today-halo').forEach(dot => {
+        const cx = parseFloat(dot.getAttribute('cx'));
+        const delay = Number.isFinite(cx) ? Math.max(0, timeAt(cx) - 0.05) : 0;
+        dot.style.opacity = '0';
         requestAnimationFrame(() => {
-            path.style.transition = `stroke-dashoffset 0.65s cubic-bezier(0.4, 0, 0.2, 1) ${i * 0.08}s`;
-            path.style.strokeDashoffset = '0';
+            dot.style.transition = `opacity 0.25s ease ${delay.toFixed(2)}s`;
+            dot.style.opacity = '1';
         });
     });
 }
@@ -81,7 +148,47 @@ function buildSegments(points) {
     return segments;
 }
 
-function buildWaveSVG(points, width, height, labels) {
+// Builds fills, dashed gap connectors, solid lines, and dots for a set of
+// points. Connectors only bridge the gap between segments (never overlap the
+// solid line) and render underneath it.
+function buildSegmentPaths(points, gradId, fillGradId, { dots = true } = {}) {
+    const segments = buildSegments(points);
+    let fills = '';
+    let connectors = '';
+    let lines = '';
+    let dotsSVG = '';
+
+    segments.forEach(segment => {
+        if (segment.length >= 2) {
+            const ax1 = segment[0].x.toFixed(1);
+            const ax2 = segment[segment.length - 1].x.toFixed(1);
+            fills += `<path d="${filledPath(segment, BASELINE_Y)}" class="wave-fill" data-ax1="${ax1}" data-ax2="${ax2}" fill="url(#${fillGradId})" opacity="0.4"/>`;
+            lines += `<path d="${smoothPath(segment)}" class="wave-path" data-ax1="${ax1}" data-ax2="${ax2}" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+        }
+    });
+
+    for (let i = 0; i < segments.length - 1; i++) {
+        const a = segments[i][segments[i].length - 1];
+        const b = segments[i + 1][0];
+        connectors += `<path d="M${a.x.toFixed(1)} ${a.y} L${b.x.toFixed(1)} ${b.y}" class="gap-path" data-ax1="${a.x.toFixed(1)}" data-ax2="${b.x.toFixed(1)}" stroke="rgba(26,58,74,0.22)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>`;
+    }
+
+    if (dots) {
+        points.filter(p => p.isLogged).forEach(point => {
+            const color = WAVE_COLORS[point.level] || WAVE_COLORS[3];
+            if (point.isToday) {
+                dotsSVG += `<circle cx="${point.x}" cy="${point.y}" r="5" class="today-halo" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
+            }
+            dotsSVG += `<circle cx="${point.x}" cy="${point.y}" r="3.5" class="mood-dot" fill="${color}" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>`;
+        });
+    }
+
+    return fills + connectors + lines + dotsSVG;
+}
+
+// todayX overrides the today-marker position for aggregated views, where the
+// bucket point containing today sits at the bucket's center, not today's day
+function buildWaveSVG(points, width, height, labels, todayX = null) {
     const gradId = 'waveGrad' + Math.random().toString(36).slice(2, 8);
     const fillGradId = 'fillGrad' + Math.random().toString(36).slice(2, 8);
 
@@ -105,37 +212,18 @@ function buildWaveSVG(points, width, height, labels) {
     gridLines += `<line x1="0" y1="160" x2="${width}" y2="160" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
     gridLines += `<line x1="0" y1="80" x2="${width}" y2="80" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
 
-    const segments = buildSegments(points);
-
-    let segmentPaths = '';
-    segments.forEach(segment => {
-        if (segment.length >= 2) {
-            segmentPaths += `<path d="${filledPath(segment, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.4"/>`;
-            segmentPaths += `<path d="${smoothPath(segment)}" class="wave-path" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
-        }
-    });
-    if (loggedPoints.length >= 2) {
-        segmentPaths += `<path d="${smoothPath(loggedPoints)}" stroke="rgba(26,58,74,0.22)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>`;
-    }
-
-    // Dots only on logged days
-    loggedPoints.forEach(point => {
-        const color = WAVE_COLORS[point.level] || WAVE_COLORS[3];
-        if (point.isToday) {
-            segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
-        }
-        segmentPaths += `<circle cx="${point.x}" cy="${point.y}" r="3.5" class="mood-dot" fill="${color}" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>`;
-    });
+    const segmentPaths = buildSegmentPaths(points, gradId, fillGradId);
 
     // Today marker
     let todayMarker = '';
-    if (todayPoint) {
+    const markerX = todayX !== null ? todayX : (todayPoint ? todayPoint.x : null);
+    if (markerX !== null) {
         const todayLabel = t('today', getCachedLanguage());
-        todayMarker = `<line x1="${todayPoint.x}" y1="12" x2="${todayPoint.x}" y2="${BASELINE_Y}" stroke="rgba(26,58,74,0.2)" stroke-width="0.75" stroke-dasharray="3 2"/>`;
-        todayMarker += `<text x="${todayPoint.x}" y="10" text-anchor="middle" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.55)">${todayLabel}</text>`;
+        todayMarker = `<line x1="${markerX}" y1="12" x2="${markerX}" y2="${BASELINE_Y}" stroke="rgba(26,58,74,0.2)" stroke-width="0.75" stroke-dasharray="3 2"/>`;
+        todayMarker += `<text x="${markerX}" y="10" text-anchor="middle" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.55)">${todayLabel}</text>`;
     }
 
-    let labelsSVG = labels || '';
+    const labelsSVG = labels || '';
 
     return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;max-width:100%;overflow:hidden;">
         <defs>
@@ -168,21 +256,37 @@ function renderYearGrid(moods, language) {
     const today = getTodayDateString();
     const yearDates = generateYearDates(viewYear);
 
+    const xForIdx = idx => (idx / (yearDates.length - 1)) * 296;
+
     let loggedCount = 0;
-    const points = [];
-
+    let todayIdx = -1;
     yearDates.forEach(({ dateString }, idx) => {
-        const moodEntry = moods[dateString];
-        const isToday = dateString === today && viewYear === currentYear;
-        const x = (idx / (yearDates.length - 1)) * 296;
-
-        if (moodEntry) {
-            loggedCount++;
-            points.push({ x, y: LEVEL_TO_Y[moodEntry.level], level: moodEntry.level, isLogged: true, isToday });
-        } else {
-            points.push({ x, y: UNLOGGED_Y, level: null, isLogged: false, isToday });
-        }
+        if (moods[dateString]) loggedCount++;
+        if (dateString === today && viewYear === currentYear) todayIdx = idx;
     });
+
+    // At year scale, 365 daily points read as noise — aggregate each 7-day
+    // chunk into one averaged point so the line stays a wave.
+    const points = [];
+    for (let start = 0; start < yearDates.length; start += 7) {
+        const chunk = yearDates.slice(start, start + 7);
+        let sum = 0;
+        let count = 0;
+        chunk.forEach(({ dateString }) => {
+            const moodEntry = moods[dateString];
+            if (moodEntry) {
+                sum += moodEntry.level;
+                count++;
+            }
+        });
+        const x = xForIdx(start + (chunk.length - 1) / 2);
+        if (count > 0) {
+            const avg = sum / count;
+            points.push({ x, y: levelToY(avg), level: Math.round(avg), isLogged: true, isToday: false });
+        } else {
+            points.push({ x, y: UNLOGGED_Y, level: null, isLogged: false, isToday: false });
+        }
+    }
 
     // Month divider ticks, labels, and click hit areas
     const monthLabels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
@@ -212,7 +316,9 @@ function renderYearGrid(moods, language) {
     }
 
     const loggedPts = points.filter(p => p.isLogged);
-    const todayPt = points.find(p => p.isToday);
+    const todayX = todayIdx >= 0 ? xForIdx(todayIdx) : null;
+    // Today's dot sits on the aggregated point of the current week
+    const todayWeekPt = todayIdx >= 0 ? points[Math.floor(todayIdx / 7)] : null;
 
     const gradId = 'yrGrad' + Math.random().toString(36).slice(2, 8);
     const fillGradId = 'yrFill' + Math.random().toString(36).slice(2, 8);
@@ -230,42 +336,32 @@ function renderYearGrid(moods, language) {
     gridLines += `<line x1="0" y1="160" x2="296" y2="160" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
     gridLines += `<line x1="0" y1="80" x2="296" y2="80" stroke="rgba(26,58,74,0.08)" stroke-width="0.5" stroke-dasharray="4 4"/>`;
 
-    const segments = buildSegments(points);
-
-    let segmentPaths = '';
-    segments.forEach(segment => {
-        if (segment.length >= 2) {
-            segmentPaths += `<path d="${filledPath(segment, BASELINE_Y)}" fill="url(#${fillGradId})" opacity="0.4"/>`;
-            segmentPaths += `<path d="${smoothPath(segment)}" class="wave-path" stroke="url(#${gradId})" stroke-width="2" stroke-linecap="round" fill="none"/>`;
-        }
-    });
-    if (loggedPts.length >= 2) {
-        segmentPaths += `<path d="${smoothPath(loggedPts)}" stroke="rgba(26,58,74,0.22)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>`;
-    }
+    // Weekly points get no per-point dots — only today's week is marked
+    let segmentPaths = buildSegmentPaths(points, gradId, fillGradId, { dots: false });
 
     // Today marker and dot (year view shows today dot)
     let todayMarker = '';
     let todayDot = '';
-    if (todayPt) {
+    if (todayX !== null) {
         const todayLabel = t('today', language);
-        todayMarker = `<line x1="${todayPt.x}" y1="12" x2="${todayPt.x}" y2="${BASELINE_Y}" stroke="rgba(26,58,74,0.2)" stroke-width="0.75" stroke-dasharray="3 2"/>`;
-        todayMarker += `<text x="${todayPt.x}" y="10" text-anchor="middle" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.55)">${todayLabel}</text>`;
-        if (todayPt.isLogged) {
-            const color = WAVE_COLORS[todayPt.level] || WAVE_COLORS[3];
-            todayDot = `<circle cx="${todayPt.x}" cy="${todayPt.y}" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
-            todayDot += `<circle cx="${todayPt.x}" cy="${todayPt.y}" r="3.5" class="mood-dot" fill="${color}" stroke="white" stroke-width="1.5"/>`;
+        todayMarker = `<line x1="${todayX}" y1="12" x2="${todayX}" y2="${BASELINE_Y}" stroke="rgba(26,58,74,0.2)" stroke-width="0.75" stroke-dasharray="3 2"/>`;
+        todayMarker += `<text x="${todayX}" y="10" text-anchor="middle" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.55)">${todayLabel}</text>`;
+        if (todayWeekPt && todayWeekPt.isLogged) {
+            const color = WAVE_COLORS[todayWeekPt.level] || WAVE_COLORS[3];
+            todayDot = `<circle cx="${todayWeekPt.x}" cy="${todayWeekPt.y}" r="5" class="today-halo" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
+            todayDot += `<circle cx="${todayWeekPt.x}" cy="${todayWeekPt.y}" r="3.5" class="mood-dot" fill="${color}" stroke="white" stroke-width="1.5"/>`;
         }
     }
 
     // Fade mask after today
     let fadeStyle = '';
-    if (todayPt && viewYear === currentYear) {
+    if (todayX !== null) {
         const fadeMaskId = 'fadeMask' + Math.random().toString(36).slice(2, 8);
         fadeStyle = `
             <defs>
                 <mask id="${fadeMaskId}">
                     <rect width="296" height="260" fill="white"/>
-                    <rect x="${todayPt.x + 5}" y="0" width="${296 - todayPt.x}" height="260" fill="black" opacity="0.7"/>
+                    <rect x="${todayX + 5}" y="0" width="${296 - todayX}" height="260" fill="black" opacity="0.7"/>
                 </mask>
             </defs>`;
         segmentPaths = `<g mask="url(#${fadeMaskId})">${segmentPaths}</g>`;
@@ -295,7 +391,7 @@ function renderYearGrid(moods, language) {
 
 // --- Month View ---
 
-function renderMonthGrid(moods, language) {
+function renderMonthGrid(moods) {
     const grid = document.getElementById('yearGrid');
     if (!grid) return 0;
 
@@ -312,21 +408,41 @@ function renderMonthGrid(moods, language) {
     const xEnd = 288;
     const xRange = xEnd - xStart;
 
+    const xForDay = day => xStart + ((day - 1) / (totalDays - 1)) * xRange;
+
+    // Like the year view's weekly averaging, aggregate 3-day buckets into
+    // single points so day-to-day swings read as a wave, not spikes
+    const BUCKET_DAYS = 3;
     let loggedCount = 0;
+    let todayX = null;
     const points = [];
 
-    for (let day = 1; day <= totalDays; day++) {
-        const date = new Date(viewYear, viewMonth, day);
-        const dateString = formatDateString(date);
-        const moodEntry = moods[dateString];
-        const isToday = dateString === today;
-        const x = xStart + ((day - 1) / (totalDays - 1)) * xRange;
+    for (let start = 1; start <= totalDays; start += BUCKET_DAYS) {
+        const end = Math.min(start + BUCKET_DAYS - 1, totalDays);
+        let sum = 0;
+        let count = 0;
+        let hasToday = false;
 
-        if (moodEntry) {
-            loggedCount++;
-            points.push({ x, y: LEVEL_TO_Y[moodEntry.level], level: moodEntry.level, isLogged: true, isToday });
+        for (let day = start; day <= end; day++) {
+            const dateString = formatDateString(new Date(viewYear, viewMonth, day));
+            if (dateString === today) {
+                hasToday = true;
+                todayX = xForDay(day);
+            }
+            const moodEntry = moods[dateString];
+            if (moodEntry) {
+                loggedCount++;
+                sum += moodEntry.level;
+                count++;
+            }
+        }
+
+        const x = xForDay((start + end) / 2);
+        if (count > 0) {
+            const avg = sum / count;
+            points.push({ x, y: levelToY(avg), level: Math.round(avg), isLogged: true, isToday: hasToday });
         } else {
-            points.push({ x, y: UNLOGGED_Y, level: null, isLogged: false, isToday });
+            points.push({ x, y: UNLOGGED_Y, level: null, isLogged: false, isToday: hasToday });
         }
     }
 
@@ -335,7 +451,7 @@ function renderMonthGrid(moods, language) {
     let labels = '';
     showDays.forEach(day => {
         if (day > totalDays) return;
-        const x = xStart + ((day - 1) / (totalDays - 1)) * xRange;
+        const x = xForDay(day);
         const dateString = formatDateString(new Date(viewYear, viewMonth, day));
         const isToday = dateString === today;
         const fill = isToday ? 'rgba(26,58,74,0.8)' : 'rgba(26,58,74,0.4)';
@@ -343,7 +459,7 @@ function renderMonthGrid(moods, language) {
         labels += `<text x="${x}" y="253" text-anchor="middle" font-size="8" font-family="Fredoka, sans-serif" fill="${fill}" ${weight}>${day}</text>`;
     });
 
-    const svg = buildWaveSVG(points, 296, 260, labels);
+    const svg = buildWaveSVG(points, 296, 260, labels, todayX);
     grid.innerHTML = svg;
     return loggedCount;
 }
@@ -489,14 +605,14 @@ export async function loadYearGrid(data = null) {
     const language = data.settings.language;
     const moods = data.moods;
     const grid = document.getElementById('yearGrid');
-    let loggedCount = 0;
+    let loggedCount;
 
     if (grid) {
         grid.className = 'year-grid';
     }
 
     if (calendarView === 'month') {
-        loggedCount = renderMonthGrid(moods, language);
+        loggedCount = renderMonthGrid(moods);
     } else if (calendarView === 'week') {
         loggedCount = renderWeekGrid(moods, language);
     } else {
