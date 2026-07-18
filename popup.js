@@ -279,7 +279,7 @@ async function init() {
     }
 
     await updateLanguage(data);
-    setupAllEventListeners(() => updateLanguage());
+    setupAllEventListeners();
 
     // Set up mood selection with hover and select callbacks
     setupMoodSelection(

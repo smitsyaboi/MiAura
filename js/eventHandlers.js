@@ -152,9 +152,8 @@ export function setupMoodSelection(onMoodHover, onMoodSelect) {
 
 /**
  * Sets up all event listeners
- * @param {Function} onLanguageChange - Callback when language changes
  */
-export function setupAllEventListeners(onLanguageChange) {
+export function setupAllEventListeners() {
     setupYearNavigation();
     setupMainNavigation();
 }
