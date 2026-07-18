@@ -1,6 +1,6 @@
 {
   "name": "miaura",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A daily mood tracking Chrome extension with Frutiger Aero aesthetic",
   "type": "module",
   "scripts": {
