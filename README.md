@@ -14,6 +14,7 @@ A Frutiger Aero-inspired mood tracker for your browser. Log your daily mood with
 - **Today Indicator** — Pulsing animation on today's date in the calendar
 - **Tooltips** — Hover logged days to see date and mood
 - **Founding Member Badge** — Shown to users who joined in the first 100
+- **Daily-Log Reminder Badge** — A small aqua dot on the toolbar icon when you're active but haven't logged today; never shown to dormant users
 - **Local Storage** — All data stays private on your device via `chrome.storage.local`
 
 ## Installation
@@ -75,7 +76,8 @@ Tap the **settings icon** in the bottom nav to:
 ## Technical Details
 
 - **Manifest Version:** 3
-- **Permissions:** `storage` only
+- **Permissions:** `storage` and `alarms`. `alarms` schedules a local midnight recompute of the daily-log reminder badge — it never sends or receives network data.
+- **Background:** A minimal service worker (`background.js`) recomputes the toolbar badge at local midnight, on browser startup, and on install/update. All computation happens locally against `chrome.storage.local`; nothing leaves the device.
 - **Browser Support:** Chrome, Edge, Brave, and other Chromium-based browsers
 
 ## Feedback & Bug Reports

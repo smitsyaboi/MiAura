@@ -4,6 +4,7 @@
  */
 
 import { migrateIfNeeded, loadData, saveData, setSetting, saveMoodForDate, setTestStreak, clearTestStreak, markReviewed } from './js/storage.js';
+import { clearBadge } from './js/badge.js';
 import { MOOD_THEMES } from './js/themes.js';
 import { getTodayDateString } from './js/dateUtils.js';
 import {
@@ -300,6 +301,7 @@ async function init() {
             // Save mood
             const today = getTodayDateString();
             await saveMoodForDate(today, level);
+            await clearBadge();
 
             // Navigate to calendar after short delay, then maybe ask for a review
             setTimeout(async () => {
