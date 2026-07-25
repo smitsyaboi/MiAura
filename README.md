@@ -90,5 +90,5 @@ Found a bug or have a suggestion? Please include:
 
 ---
 
-**Version:** 1.4.1  
+**Version:** 1.4.2  
 **License:** MIT

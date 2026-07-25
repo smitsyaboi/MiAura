@@ -266,26 +266,47 @@ function renderYearGrid(moods, language) {
     });
 
     // At year scale, 365 daily points read as noise — aggregate each 7-day
-    // chunk into one averaged point so the line stays a wave.
+    // chunk into one averaged point so the line stays a wave. Today is pulled
+    // out as its own exact point so it lands on the today marker at its true
+    // level instead of being blended into its week's average.
     const points = [];
-    for (let start = 0; start < yearDates.length; start += 7) {
-        const chunk = yearDates.slice(start, start + 7);
-        let sum = 0;
-        let count = 0;
-        chunk.forEach(({ dateString }) => {
-            const moodEntry = moods[dateString];
-            if (moodEntry) {
-                sum += moodEntry.level;
-                count++;
+    let todayPt = null;
+
+    const pushWeeks = (fromIdx, toIdx) => {
+        for (let start = fromIdx; start <= toIdx; start += 7) {
+            const end = Math.min(start + 6, toIdx);
+            let sum = 0;
+            let count = 0;
+            for (let i = start; i <= end; i++) {
+                const moodEntry = moods[yearDates[i].dateString];
+                if (moodEntry) {
+                    sum += moodEntry.level;
+                    count++;
+                }
             }
-        });
-        const x = xForIdx(start + (chunk.length - 1) / 2);
-        if (count > 0) {
-            const avg = sum / count;
-            points.push({ x, y: levelToY(avg), level: Math.round(avg), isLogged: true, isToday: false });
-        } else {
-            points.push({ x, y: UNLOGGED_Y, level: null, isLogged: false, isToday: false });
+            const x = xForIdx((start + end) / 2);
+            if (count > 0) {
+                const avg = sum / count;
+                points.push({ x, y: levelToY(avg), level: Math.round(avg), isLogged: true, isToday: false });
+            } else {
+                points.push({ x, y: UNLOGGED_Y, level: null, isLogged: false, isToday: false });
+            }
         }
+    };
+
+    if (todayIdx >= 0) {
+        pushWeeks(0, todayIdx - 1);
+        const todayMood = moods[yearDates[todayIdx].dateString];
+        const tx = xForIdx(todayIdx);
+        if (todayMood) {
+            todayPt = { x: tx, y: LEVEL_TO_Y[todayMood.level], level: todayMood.level, isLogged: true, isToday: true };
+        } else {
+            todayPt = { x: tx, y: UNLOGGED_Y, level: null, isLogged: false, isToday: true };
+        }
+        points.push(todayPt);
+        pushWeeks(todayIdx + 1, yearDates.length - 1);
+    } else {
+        pushWeeks(0, yearDates.length - 1);
     }
 
     // Month divider ticks, labels, and click hit areas
@@ -316,9 +337,7 @@ function renderYearGrid(moods, language) {
     }
 
     const loggedPts = points.filter(p => p.isLogged);
-    const todayX = todayIdx >= 0 ? xForIdx(todayIdx) : null;
-    // Today's dot sits on the aggregated point of the current week
-    const todayWeekPt = todayIdx >= 0 ? points[Math.floor(todayIdx / 7)] : null;
+    const todayX = todayPt ? todayPt.x : null;
 
     const gradId = 'yrGrad' + Math.random().toString(36).slice(2, 8);
     const fillGradId = 'yrFill' + Math.random().toString(36).slice(2, 8);
@@ -346,10 +365,10 @@ function renderYearGrid(moods, language) {
         const todayLabel = t('today', language);
         todayMarker = `<line x1="${todayX}" y1="12" x2="${todayX}" y2="${BASELINE_Y}" stroke="rgba(26,58,74,0.2)" stroke-width="0.75" stroke-dasharray="3 2"/>`;
         todayMarker += `<text x="${todayX}" y="10" text-anchor="middle" font-size="7" font-family="Fredoka, sans-serif" fill="rgba(26,58,74,0.55)">${todayLabel}</text>`;
-        if (todayWeekPt && todayWeekPt.isLogged) {
-            const color = WAVE_COLORS[todayWeekPt.level] || WAVE_COLORS[3];
-            todayDot = `<circle cx="${todayWeekPt.x}" cy="${todayWeekPt.y}" r="5" class="today-halo" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
-            todayDot += `<circle cx="${todayWeekPt.x}" cy="${todayWeekPt.y}" r="3.5" class="mood-dot" fill="${color}" stroke="white" stroke-width="1.5"/>`;
+        if (todayPt && todayPt.isLogged) {
+            const color = WAVE_COLORS[todayPt.level] || WAVE_COLORS[3];
+            todayDot = `<circle cx="${todayPt.x}" cy="${todayPt.y}" r="5" class="today-halo" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"/>`;
+            todayDot += `<circle cx="${todayPt.x}" cy="${todayPt.y}" r="3.5" class="mood-dot" fill="${color}" stroke="white" stroke-width="1.5"/>`;
         }
     }
 
@@ -410,40 +429,58 @@ function renderMonthGrid(moods) {
 
     const xForDay = day => xStart + ((day - 1) / (totalDays - 1)) * xRange;
 
-    // Like the year view's weekly averaging, aggregate 3-day buckets into
-    // single points so day-to-day swings read as a wave, not spikes
+    // Prior days aggregate into 3-day buckets so swings read as a wave, but
+    // today is drawn as its own point at its exact level and sits directly
+    // under the today marker (bucket-averaging would dilute and offset it).
     const BUCKET_DAYS = 3;
     let loggedCount = 0;
     let todayX = null;
     const points = [];
 
-    for (let start = 1; start <= totalDays; start += BUCKET_DAYS) {
-        const end = Math.min(start + BUCKET_DAYS - 1, totalDays);
-        let sum = 0;
-        let count = 0;
-        let hasToday = false;
+    let todayDay = null;
+    for (let day = 1; day <= totalDays; day++) {
+        if (formatDateString(new Date(viewYear, viewMonth, day)) === today) {
+            todayDay = day;
+            break;
+        }
+    }
 
-        for (let day = start; day <= end; day++) {
-            const dateString = formatDateString(new Date(viewYear, viewMonth, day));
-            if (dateString === today) {
-                hasToday = true;
-                todayX = xForDay(day);
+    const pushBuckets = (fromDay, toDay) => {
+        for (let start = fromDay; start <= toDay; start += BUCKET_DAYS) {
+            const end = Math.min(start + BUCKET_DAYS - 1, toDay);
+            let sum = 0;
+            let count = 0;
+            for (let day = start; day <= end; day++) {
+                const moodEntry = moods[formatDateString(new Date(viewYear, viewMonth, day))];
+                if (moodEntry) {
+                    loggedCount++;
+                    sum += moodEntry.level;
+                    count++;
+                }
             }
-            const moodEntry = moods[dateString];
-            if (moodEntry) {
-                loggedCount++;
-                sum += moodEntry.level;
-                count++;
+            const x = xForDay((start + end) / 2);
+            if (count > 0) {
+                const avg = sum / count;
+                points.push({ x, y: levelToY(avg), level: Math.round(avg), isLogged: true, isToday: false });
+            } else {
+                points.push({ x, y: UNLOGGED_Y, level: null, isLogged: false, isToday: false });
             }
         }
+    };
 
-        const x = xForDay((start + end) / 2);
-        if (count > 0) {
-            const avg = sum / count;
-            points.push({ x, y: levelToY(avg), level: Math.round(avg), isLogged: true, isToday: hasToday });
+    if (todayDay !== null) {
+        pushBuckets(1, todayDay - 1);
+        todayX = xForDay(todayDay);
+        const todayMood = moods[formatDateString(new Date(viewYear, viewMonth, todayDay))];
+        if (todayMood) {
+            loggedCount++;
+            points.push({ x: todayX, y: LEVEL_TO_Y[todayMood.level], level: todayMood.level, isLogged: true, isToday: true });
         } else {
-            points.push({ x, y: UNLOGGED_Y, level: null, isLogged: false, isToday: hasToday });
+            points.push({ x: todayX, y: UNLOGGED_Y, level: null, isLogged: false, isToday: true });
         }
+        pushBuckets(todayDay + 1, totalDays);
+    } else {
+        pushBuckets(1, totalDays);
     }
 
     // Day labels: show 1, 5, 10, 15, 20, 25, last day
