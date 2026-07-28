@@ -40,7 +40,7 @@ describe('shouldShowBadge', () => {
 
     it('shows the badge for an active user who has not logged today', () => {
         const moods = {
-            [daysAgo(2, new Date(today))]: { level: 3, timestamp: '2026-07-12T10:00:00.000Z' }
+            [daysAgo(2, new Date(`${today}T00:00:00`))]: { level: 3, timestamp: '2026-07-12T10:00:00.000Z' }
         };
         expect(shouldShowBadge(moods, today)).toBe(true);
     });
@@ -48,22 +48,22 @@ describe('shouldShowBadge', () => {
     it('does not show the badge when today is already logged', () => {
         const moods = {
             [today]: { level: 2, timestamp: '2026-07-14T09:00:00.000Z' },
-            [daysAgo(1, new Date(today))]: { level: 3, timestamp: '2026-07-13T09:00:00.000Z' }
+            [daysAgo(1, new Date(`${today}T00:00:00`))]: { level: 3, timestamp: '2026-07-13T09:00:00.000Z' }
         };
         expect(shouldShowBadge(moods, today)).toBe(false);
     });
 
     it('does not show the badge when there are no logs in the last 7 days', () => {
         const moods = {
-            [daysAgo(10, new Date(today))]: { level: 3, timestamp: '2026-07-04T10:00:00.000Z' }
+            [daysAgo(10, new Date(`${today}T00:00:00`))]: { level: 3, timestamp: '2026-07-04T10:00:00.000Z' }
         };
         expect(shouldShowBadge(moods, today)).toBe(false);
     });
 
     it('does not show the badge when the only recent logs are isTest entries', () => {
         const moods = {
-            [daysAgo(1, new Date(today))]: { level: 3, timestamp: '2026-07-13T10:00:00.000Z', isTest: true },
-            [daysAgo(3, new Date(today))]: { level: 4, timestamp: '2026-07-11T10:00:00.000Z', isTest: true }
+            [daysAgo(1, new Date(`${today}T00:00:00`))]: { level: 3, timestamp: '2026-07-13T10:00:00.000Z', isTest: true },
+            [daysAgo(3, new Date(`${today}T00:00:00`))]: { level: 4, timestamp: '2026-07-11T10:00:00.000Z', isTest: true }
         };
         expect(shouldShowBadge(moods, today)).toBe(false);
     });
@@ -74,7 +74,7 @@ describe('shouldShowBadge', () => {
 
     it('counts a real mood exactly 6 days ago as within the active window', () => {
         const moods = {
-            [daysAgo(6, new Date(today))]: { level: 1, timestamp: '2026-07-08T10:00:00.000Z' }
+            [daysAgo(6, new Date(`${today}T00:00:00`))]: { level: 1, timestamp: '2026-07-08T10:00:00.000Z' }
         };
         expect(shouldShowBadge(moods, today)).toBe(true);
     });
